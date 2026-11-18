@@ -8,20 +8,11 @@ import { mergeStates } from "./merge"
 import { applyAnswer, cardOf, dayKey, emptyProgress } from "./srs"
 
 const STORAGE_KEY = "quizmaster.state.v1"
-const DEVICE_KEY = "quizmaster.device.v1"
 
-/** A stable id for this browser, so each device syncs into its own file. */
-function deviceId() {
-  try {
-    const existing = window.localStorage.getItem(DEVICE_KEY)
-    if (existing) return existing
-    const fresh = `d${Math.random().toString(36).slice(2)}${Date.now().toString(36)}`
-    window.localStorage.setItem(DEVICE_KEY, fresh)
-    return fresh
-  } catch {
-    return "default"
-  }
-}
+/** How long changes settle before a save, and how rarely another device is polled. */
+const PUSH_DELAY_MS = 10_000
+const PULL_INTERVAL_MS = 5 * 60_000
+
 
 export type Account = { username: string; displayName: string }
 export type SyncStatus = "off" | "checking" | "synced" | "saving" | "error"
@@ -107,6 +98,9 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
   const stateRef = React.useRef(state)
   stateRef.current = state
   const pushTimer = React.useRef<number | null>(null)
+  /** Serialized state of the last successful save, so identical pushes are skipped. */
+  const lastPushed = React.useRef<string | null>(null)
+  const lastPulled = React.useRef(0)
 
   React.useEffect(() => {
     try {
@@ -169,18 +163,23 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
       setState(merged)
     }
     setSyncArmed(true)
+    lastPulled.current = Date.now()
     setLastSyncedAt(Date.now())
   }, [isPristineSeed])
 
-  const push = React.useCallback(async () => {
+  const push = React.useCallback(async (force = false) => {
+    const body = JSON.stringify(stateRef.current)
+    // Saving is billed per write, so nothing is sent when nothing changed.
+    if (!force && body === lastPushed.current) return
     setSyncStatus("saving")
     try {
       const response = await fetch("/api/state", {
         method: "PUT",
-        headers: { "Content-Type": "application/json", "x-device-id": deviceId() },
-        body: JSON.stringify(stateRef.current),
+        headers: { "Content-Type": "application/json" },
+        body,
       })
       if (!response.ok) throw new Error("push failed")
+      lastPushed.current = body
       setLastSyncedAt(Date.now())
       setSyncStatus("synced")
     } catch {
@@ -217,25 +216,37 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [ready])
 
-  // Save to the account shortly after any change settles.
+  // Save once changes have settled. The device keeps everything in
+  // localStorage meanwhile, so a long gap between saves risks nothing.
   React.useEffect(() => {
     if (!ready || !account || !syncArmed) return
     if (pushTimer.current) window.clearTimeout(pushTimer.current)
-    pushTimer.current = window.setTimeout(() => void push(), 1500)
+    pushTimer.current = window.setTimeout(() => void push(), PUSH_DELAY_MS)
     return () => {
       if (pushTimer.current) window.clearTimeout(pushTimer.current)
     }
   }, [state, ready, account, syncArmed, push])
 
-  // Pull again when the tab regains focus, so another device's work shows up.
+  // Save immediately when the tab is hidden or closed, and pick up another
+  // device's work when it is reopened — but not more often than necessary.
   React.useEffect(() => {
     if (!account || !syncArmed) return
-    function onFocus() {
+    function onVisibility() {
+      if (document.visibilityState === "hidden") {
+        if (pushTimer.current) window.clearTimeout(pushTimer.current)
+        void push()
+        return
+      }
+      if (Date.now() - lastPulled.current < PULL_INTERVAL_MS) return
       void pullAndMerge().catch(() => setSyncStatus("error"))
     }
-    window.addEventListener("focus", onFocus)
-    return () => window.removeEventListener("focus", onFocus)
-  }, [account, syncArmed, pullAndMerge])
+    document.addEventListener("visibilitychange", onVisibility)
+    window.addEventListener("pagehide", onVisibility)
+    return () => {
+      document.removeEventListener("visibilitychange", onVisibility)
+      window.removeEventListener("pagehide", onVisibility)
+    }
+  }, [account, syncArmed, pullAndMerge, push])
 
   const value = React.useMemo<Ctx>(() => {
     const touchProgress = (draft: AppState, setId: string) => {
@@ -287,7 +298,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
         if (!account) return
         try {
           await pullAndMerge()
-          await push()
+          await push(true)
         } catch {
           setSyncStatus("error")
         }

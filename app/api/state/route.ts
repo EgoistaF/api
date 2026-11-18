@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server"
 import { cookies } from "next/headers"
-import { SESSION_COOKIE, readSessionToken, safeDeviceId, statePrefix } from "@/lib/server/auth"
-import { StorageError, listJson, writeJson } from "@/lib/server/blob-store"
+import { SESSION_COOKIE, blobPath, readSessionToken } from "@/lib/server/auth"
+import { StorageError, readJson, writeJson } from "@/lib/server/blob-store"
 import { mergeStates } from "@/lib/merge"
 import type { AppState } from "@/lib/types"
 
@@ -9,7 +9,6 @@ export const runtime = "nodejs"
 export const dynamic = "force-dynamic"
 
 const MAX_BYTES = 4 * 1024 * 1024
-const MAX_DEVICES = 20
 const STORAGE_MESSAGE =
   "Сервис профилей сейчас недоступен. Данные остались на этом устройстве — попробуйте позже."
 
@@ -26,18 +25,8 @@ export async function GET() {
   const userId = await currentUserId()
   if (!userId) return NextResponse.json({ error: "Не выполнен вход" }, { status: 401 })
 
-  let files: AppState[]
-  try {
-    files = await listJson<AppState>(statePrefix(userId), MAX_DEVICES)
-  } catch (cause) {
-    if (cause instanceof StorageError) return NextResponse.json({ error: STORAGE_MESSAGE }, { status: 503 })
-    throw cause
-  }
-  const states = files.filter(looksLikeState)
-  if (!states.length) return NextResponse.json({ state: null })
-
-  const state = states.reduce((merged, next) => mergeStates(merged, next))
-  return NextResponse.json({ state, devices: states.length })
+  const stored = await readJson<AppState>(blobPath("state", userId))
+  return NextResponse.json({ state: looksLikeState(stored) ? stored : null })
 }
 
 export async function PUT(request: Request) {
@@ -49,19 +38,24 @@ export async function PUT(request: Request) {
     return NextResponse.json({ error: "Библиотека слишком велика для синхронизации" }, { status: 413 })
   }
 
-  let state: unknown
+  let incoming: unknown
   try {
-    state = JSON.parse(raw)
+    incoming = JSON.parse(raw)
   } catch {
     return NextResponse.json({ error: "Некорректные данные" }, { status: 400 })
   }
-  if (!looksLikeState(state)) {
+  if (!looksLikeState(incoming)) {
     return NextResponse.json({ error: "Некорректные данные" }, { status: 400 })
   }
 
-  const device = safeDeviceId(request.headers.get("x-device-id"))
+  const path = blobPath("state", userId)
   try {
-    await writeJson(`${statePrefix(userId)}${device}.json`, state)
+    // Merge with what is already stored instead of replacing it. Downloading
+    // costs no advanced operation, and a union merge means a device that was
+    // briefly out of date cannot wipe another device's work.
+    const stored = await readJson<AppState>(path)
+    const next = looksLikeState(stored) ? mergeStates(incoming, stored) : incoming
+    await writeJson(path, next)
   } catch (cause) {
     if (cause instanceof StorageError) return NextResponse.json({ error: STORAGE_MESSAGE }, { status: 503 })
     throw cause

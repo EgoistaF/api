@@ -1,3 +1,4 @@
+import { gunzipSync, gzipSync } from "node:zlib"
 import { list, put } from "@vercel/blob"
 
 /** Thrown when blob storage itself is unavailable, so routes can say so plainly. */
@@ -12,103 +13,93 @@ export class StorageError extends Error {
   }
 }
 
-/**
- * Vercel Blob rejects a cache age below its minimum, so writes ask for the
- * shortest cache it accepts. Freshness does not depend on it: reads bust the
- * CDN with a unique query, each device writes only its own file, and sync
- * merges rather than overwrites.
- */
+/** Vercel Blob rejects a cache age below its minimum. */
 const MIN_CACHE_SECONDS = 60
+
+/**
+ * Vercel Blob bills `put` and `list` as "advanced operations" and the Hobby
+ * plan allows only 2 000 a month. Downloading a blob by its URL is not one,
+ * so reads go straight to the public URL and `list` is called at most once
+ * per cold start, only to learn the store's host. Set BLOB_BASE_URL to skip
+ * even that.
+ */
+let cachedBase: string | null = process.env.BLOB_BASE_URL?.replace(/\/$/, "") ?? null
+
+function rememberBase(url: string) {
+  try {
+    cachedBase = new URL(url).origin
+  } catch {
+    /* keep whatever we had */
+  }
+}
+
+async function baseUrl(): Promise<string | null> {
+  if (cachedBase) return cachedBase
+  try {
+    const found = await list({ limit: 1 })
+    const sample = found.blobs[0]
+    if (sample) rememberBase(sample.url)
+  } catch (cause) {
+    console.error("[storage] could not resolve blob host", cause)
+  }
+  return cachedBase
+}
+
+/** Last write failure, so the health endpoint can report it without writing. */
+let lastWriteError: { at: number; message: string } | null = null
+export const lastWriteFailure = () => lastWriteError
 
 export async function writeJson(pathname: string, data: unknown) {
   try {
-    await put(pathname, JSON.stringify(data), {
+    // Stored gzipped: a full library is ~500 KB of JSON but under 60 KB
+    // compressed, which keeps data transfer small as well.
+    const result = await put(pathname, gzipSync(Buffer.from(JSON.stringify(data))), {
       access: "public",
       addRandomSuffix: false,
       allowOverwrite: true,
-      contentType: "application/json",
+      contentType: "application/octet-stream",
       cacheControlMaxAge: MIN_CACHE_SECONDS,
     })
+    rememberBase(result.url)
+    lastWriteError = null
   } catch (cause) {
-    console.error("[storage] write failed", pathname, cause)
+    const message = cause instanceof Error ? cause.message : String(cause)
+    console.error("[storage] write failed", pathname, message)
+    lastWriteError = { at: Date.now(), message }
     throw new StorageError("write", cause)
   }
 }
 
-async function listBlobs(prefix: string, limit: number) {
-  try {
-    return await list({ prefix, limit })
-  } catch (cause) {
-    console.error("[storage] list failed", prefix, cause)
-    throw new StorageError("read", cause)
-  }
-}
+const GZIP_MAGIC = [0x1f, 0x8b]
 
-async function fetchJson<T>(url: string): Promise<T | null> {
+async function download<T>(url: string): Promise<T | null> {
   try {
     const response = await fetch(`${url}?t=${Date.now()}`, { cache: "no-store" })
     if (!response.ok) return null
-    return (await response.json()) as T
+    const bytes = Buffer.from(await response.arrayBuffer())
+    if (!bytes.length) return null
+    // Files written before compression was added are plain JSON.
+    const text = bytes[0] === GZIP_MAGIC[0] && bytes[1] === GZIP_MAGIC[1] ? gunzipSync(bytes).toString() : bytes.toString()
+    return JSON.parse(text) as T
   } catch {
     return null
   }
 }
 
+/** Reads one stored file. Costs no advanced operation once the host is known. */
 export async function readJson<T>(pathname: string): Promise<T | null> {
-  const found = await listBlobs(pathname, 1)
-  const blob = found.blobs.find((item) => item.pathname === pathname)
-  if (!blob) return null
-  return fetchJson<T>(blob.url)
+  const base = await baseUrl()
+  if (!base) return null
+  return download<T>(`${base}/${pathname}`)
 }
 
-/** Every device file stored under one account, newest first. */
-export async function listJson<T>(prefix: string, limit = 20): Promise<T[]> {
-  const found = await listBlobs(prefix, limit)
-  const blobs = found.blobs.sort((a, b) => Number(new Date(b.uploadedAt)) - Number(new Date(a.uploadedAt)))
-  const results = await Promise.all(blobs.map((blob) => fetchJson<T>(blob.url)))
-  return results.filter((item): item is Awaited<T> => item !== null) as T[]
-}
-
-/** Reports whether storage is readable, without touching any user data. */
+/** Whether the store can be reached at all, without touching user data. */
 export async function storageReadable() {
   try {
-    await list({ prefix: "healthcheck/", limit: 1 })
-    return true
+    return Boolean(await baseUrl())
   } catch {
     return false
   }
-}
-
-/**
- * Reports whether storage actually accepts writes.
- *
- * Reads succeed even against a store that no longer exists — they just come
- * back empty — so a read-only check reports healthy while every sign-up
- * fails. The probe overwrites one fixed file and is throttled per instance
- * so it cannot be used to run up writes.
- */
-const WRITE_PROBE_PATH = "healthcheck/ping.json"
-const WRITE_PROBE_TTL = 60_000
-let lastWriteProbe: { at: number; ok: boolean } | null = null
-
-export async function storageWritable() {
-  const now = Date.now()
-  if (lastWriteProbe && now - lastWriteProbe.at < WRITE_PROBE_TTL) return lastWriteProbe.ok
-  let ok = false
-  try {
-    await put(WRITE_PROBE_PATH, JSON.stringify({ at: now }), {
-      access: "public",
-      addRandomSuffix: false,
-      allowOverwrite: true,
-      contentType: "application/json",
-      cacheControlMaxAge: MIN_CACHE_SECONDS,
-    })
-    ok = true
-  } catch (cause) {
-    console.error("[storage] write probe failed", cause)
-  }
-  lastWriteProbe = { at: now, ok }
-  return ok
 }
 
 export type UserRecord = {
