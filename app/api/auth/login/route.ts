@@ -1,9 +1,12 @@
 import { NextResponse } from "next/server"
 import { blobPath, createSessionToken, normalizeUsername, sessionCookie, verifyPassword } from "@/lib/server/auth"
-import { readJson, type UserRecord } from "@/lib/server/blob-store"
+import { StorageError, readJson, type UserRecord } from "@/lib/server/blob-store"
 
 export const runtime = "nodejs"
 export const dynamic = "force-dynamic"
+
+const STORAGE_MESSAGE =
+  "Сервис профилей сейчас недоступен. Данные остались на этом устройстве — попробуйте позже."
 
 export async function POST(request: Request) {
   let body: { username?: unknown; password?: unknown }
@@ -19,7 +22,16 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Введите имя и пароль" }, { status: 400 })
   }
 
-  const user = await readJson<UserRecord>(blobPath("user", username))
+  let user: UserRecord | null
+  try {
+    user = await readJson<UserRecord>(blobPath("user", username))
+  } catch (cause) {
+    if (cause instanceof StorageError) {
+      return NextResponse.json({ error: STORAGE_MESSAGE, code: "storage_unavailable" }, { status: 503 })
+    }
+    console.error("[login] unexpected failure", cause)
+    return NextResponse.json({ error: "Не удалось выполнить вход" }, { status: 500 })
+  }
   // Same message either way, so the form never reveals which names exist.
   if (!user || !verifyPassword(password, user.salt, user.hash)) {
     return NextResponse.json({ error: "Неверное имя или пароль" }, { status: 401 })

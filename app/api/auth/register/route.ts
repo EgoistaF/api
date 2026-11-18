@@ -1,10 +1,13 @@
 import { NextResponse } from "next/server"
 import { randomUUID } from "node:crypto"
 import { blobPath, createSessionToken, hashPassword, normalizeUsername, sessionCookie, validateCredentials } from "@/lib/server/auth"
-import { readJson, writeJson, type UserRecord } from "@/lib/server/blob-store"
+import { StorageError, readJson, writeJson, type UserRecord } from "@/lib/server/blob-store"
 
 export const runtime = "nodejs"
 export const dynamic = "force-dynamic"
+
+const STORAGE_MESSAGE =
+  "Сервис профилей сейчас недоступен. Данные остались на этом устройстве — попробуйте позже."
 
 export async function POST(request: Request) {
   let body: { username?: unknown; password?: unknown; displayName?: unknown }
@@ -19,21 +22,31 @@ export async function POST(request: Request) {
   if (problem) return NextResponse.json({ error: problem }, { status: 400 })
 
   const path = blobPath("user", username)
-  const existing = await readJson<UserRecord>(path)
-  if (existing) {
-    return NextResponse.json({ error: "Это имя уже занято" }, { status: 409 })
-  }
+  let user: UserRecord
+  try {
+    const existing = await readJson<UserRecord>(path)
+    if (existing) {
+      return NextResponse.json({ error: "Это имя уже занято" }, { status: 409 })
+    }
 
-  const { salt, hash } = hashPassword(body.password as string)
-  const user: UserRecord = {
-    id: randomUUID(),
-    username,
-    displayName: typeof body.displayName === "string" && body.displayName.trim() ? body.displayName.trim().slice(0, 60) : username,
-    salt,
-    hash,
-    createdAt: Date.now(),
+    const { salt, hash } = hashPassword(body.password as string)
+    user = {
+      id: randomUUID(),
+      username,
+      displayName:
+        typeof body.displayName === "string" && body.displayName.trim() ? body.displayName.trim().slice(0, 60) : username,
+      salt,
+      hash,
+      createdAt: Date.now(),
+    }
+    await writeJson(path, user)
+  } catch (cause) {
+    if (cause instanceof StorageError) {
+      return NextResponse.json({ error: STORAGE_MESSAGE, code: "storage_unavailable" }, { status: 503 })
+    }
+    console.error("[register] unexpected failure", cause)
+    return NextResponse.json({ error: "Не удалось создать профиль" }, { status: 500 })
   }
-  await writeJson(path, user)
 
   const response = NextResponse.json({ user: { username: user.username, displayName: user.displayName } })
   response.cookies.set(sessionCookie(createSessionToken({ id: user.id, username: user.username, displayName: user.displayName })))

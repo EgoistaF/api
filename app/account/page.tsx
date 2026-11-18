@@ -3,7 +3,7 @@
 import * as React from "react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
-import { Check, CloudOff, Loader2, LogOut, RefreshCw, ShieldCheck, UserPlus } from "lucide-react"
+import { AlertTriangle, Check, CloudOff, Loader2, LogOut, RefreshCw, ShieldCheck, UserPlus } from "lucide-react"
 import { toast } from "sonner"
 import { useStore } from "@/lib/store"
 import { plural, relativeDate } from "@/lib/text"
@@ -22,6 +22,24 @@ export default function AccountPage() {
   const [repeat, setRepeat] = React.useState("")
   const [busy, setBusy] = React.useState(false)
   const [error, setError] = React.useState<string | null>(null)
+  const [serviceDown, setServiceDown] = React.useState(false)
+
+  // Say up front when the profile service itself is unavailable, so a failed
+  // sign-in is not mistaken for a wrong password.
+  React.useEffect(() => {
+    let cancelled = false
+    fetch("/api/health", { cache: "no-store" })
+      .then((response) => response.json())
+      .then((payload: { ok?: boolean }) => {
+        if (!cancelled) setServiceDown(payload?.ok === false)
+      })
+      .catch(() => {
+        if (!cancelled) setServiceDown(true)
+      })
+    return () => {
+      cancelled = true
+    }
+  }, [])
 
   async function submit(mode: "login" | "register") {
     setError(null)
@@ -125,6 +143,23 @@ export default function AccountPage() {
           сохраняться на сервере.
         </p>
       </div>
+
+      {serviceDown && (
+        <div className="mt-6 flex gap-3 rounded-xl border-2 border-accent bg-accent/10 p-4">
+          <AlertTriangle className="mt-0.5 size-5 shrink-0 text-accent-foreground dark:text-accent" />
+          <div className="text-sm">
+            <p className="font-bold">Сервис профилей сейчас недоступен</p>
+            <p className="mt-1 text-muted-foreground">
+              Зарегистрироваться и войти пока не получится. Приложение при этом работает полностью: карточки и
+              прогресс сохраняются в этом браузере. Чтобы точно ничего не потерять, сделайте копию в{" "}
+              <Link href="/settings#import" className="font-bold text-primary underline">
+                настройках
+              </Link>
+              .
+            </p>
+          </div>
+        </div>
+      )}
 
       <Tabs defaultValue="register" className="mt-6">
         <TabsList className="w-full">

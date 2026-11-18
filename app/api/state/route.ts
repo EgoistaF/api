@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server"
 import { cookies } from "next/headers"
 import { SESSION_COOKIE, readSessionToken, safeDeviceId, statePrefix } from "@/lib/server/auth"
-import { listJson, writeJson } from "@/lib/server/blob-store"
+import { StorageError, listJson, writeJson } from "@/lib/server/blob-store"
 import { mergeStates } from "@/lib/merge"
 import type { AppState } from "@/lib/types"
 
@@ -10,6 +10,8 @@ export const dynamic = "force-dynamic"
 
 const MAX_BYTES = 4 * 1024 * 1024
 const MAX_DEVICES = 20
+const STORAGE_MESSAGE =
+  "Сервис профилей сейчас недоступен. Данные остались на этом устройстве — попробуйте позже."
 
 async function currentUserId() {
   const jar = await cookies()
@@ -24,7 +26,13 @@ export async function GET() {
   const userId = await currentUserId()
   if (!userId) return NextResponse.json({ error: "Не выполнен вход" }, { status: 401 })
 
-  const files = await listJson<AppState>(statePrefix(userId), MAX_DEVICES)
+  let files: AppState[]
+  try {
+    files = await listJson<AppState>(statePrefix(userId), MAX_DEVICES)
+  } catch (cause) {
+    if (cause instanceof StorageError) return NextResponse.json({ error: STORAGE_MESSAGE }, { status: 503 })
+    throw cause
+  }
   const states = files.filter(looksLikeState)
   if (!states.length) return NextResponse.json({ state: null })
 
@@ -52,6 +60,11 @@ export async function PUT(request: Request) {
   }
 
   const device = safeDeviceId(request.headers.get("x-device-id"))
-  await writeJson(`${statePrefix(userId)}${device}.json`, state)
+  try {
+    await writeJson(`${statePrefix(userId)}${device}.json`, state)
+  } catch (cause) {
+    if (cause instanceof StorageError) return NextResponse.json({ error: STORAGE_MESSAGE }, { status: 503 })
+    throw cause
+  }
   return NextResponse.json({ ok: true, savedAt: Date.now() })
 }
