@@ -25,9 +25,11 @@ export const metadata: Metadata = {
 }
 
 export const viewport: Viewport = {
+  // Matches --card: the header and the tab bar sit against the phone's own
+  // status and gesture bars, so the seam should be invisible.
   themeColor: [
-    { media: "(prefers-color-scheme: light)", color: "#f6f7fb" },
-    { media: "(prefers-color-scheme: dark)", color: "#0a092d" },
+    { media: "(prefers-color-scheme: light)", color: "#ffffff" },
+    { media: "(prefers-color-scheme: dark)", color: "#171717" },
   ],
 }
 

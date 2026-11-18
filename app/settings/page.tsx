@@ -1,9 +1,10 @@
 "use client"
 
 import * as React from "react"
-import { Download, RefreshCw, Trash2, Upload } from "lucide-react"
+import { Download, RefreshCw, Sparkles, Trash2, Upload } from "lucide-react"
 import { toast } from "sonner"
 import { useStore } from "@/lib/store"
+import { plural } from "@/lib/text"
 import { Button } from "@/components/ui/button"
 import { Label } from "@/components/ui/label"
 import { Switch } from "@/components/ui/switch"
@@ -23,11 +24,13 @@ import {
 } from "@/components/ui/alert-dialog"
 
 export default function SettingsPage() {
-  const { state, ready, updateSettings, exportState, importState, resetAll } = useStore()
+  const { state, ready, updateSettings, exportState, importState, resetAll, demoSetCount, removeDemoSets } = useStore()
   const [raw, setRaw] = React.useState("")
   const fileRef = React.useRef<HTMLInputElement>(null)
 
   if (!ready) return <Skeleton className="mx-auto mt-10 h-64 max-w-2xl rounded-xl" />
+
+  const demoCount = demoSetCount()
 
   function download() {
     const blob = new Blob([exportState()], { type: "application/json" })
@@ -138,6 +141,27 @@ export default function SettingsPage() {
           </Button>
         </div>
       </section>
+
+      {demoCount > 0 && (
+        <section className="mt-6 space-y-3 rounded-xl border bg-card p-5">
+          <h2 className="display-type font-extrabold">Примеры</h2>
+          <p className="text-sm text-muted-foreground">
+            В библиотеке лежат {demoCount} {plural(demoCount, "демо-модуль", "демо-модуля", "демо-модулей")}, которые
+            приложение создало при первом запуске. Ваши модули и прогресс это не затронет.
+          </p>
+          <Button
+            variant="outline"
+            className="rounded-md font-bold"
+            onClick={() => {
+              const removed = removeDemoSets()
+              toast.success(`Удалено: ${removed}`)
+            }}
+          >
+            <Sparkles className="size-4" />
+            Убрать примеры
+          </Button>
+        </section>
+      )}
 
       <section className="mt-6 space-y-4 rounded-xl border bg-card p-5">
         <h2 className="display-type font-extrabold">Сброс</h2>

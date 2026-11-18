@@ -58,6 +58,9 @@ type Ctx = {
   importState: (raw: string) => { ok: boolean; message: string }
   exportState: () => string
   resetAll: (withDemo: boolean) => void
+  /** Sample modules an earlier version created, still untouched. */
+  demoSetCount: () => number
+  removeDemoSets: () => number
 }
 
 const StoreContext = React.createContext<Ctx | null>(null)
@@ -87,6 +90,17 @@ function migrate(parsed: unknown): AppState | null {
   }
 }
 
+/** A sample module is only removable while it is untouched: never edited, never studied. */
+function isUntouchedDemo(set: StudySet, state: AppState) {
+  if (set.author !== "demo" || set.updatedAt !== set.createdAt) return false
+  const cards = state.progress[set.id]?.cards
+  return !cards || Object.keys(cards).length === 0
+}
+
+function countDemoSets(state: AppState) {
+  return state.sets.filter((set) => isUntouchedDemo(set, state)).length
+}
+
 export function StoreProvider({ children }: { children: React.ReactNode }) {
   const [state, setState] = React.useState<AppState>(() => emptyState())
   const [ready, setReady] = React.useState(false)
@@ -107,12 +121,12 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
       const raw = window.localStorage.getItem(STORAGE_KEY)
       if (raw) {
         const migrated = migrate(JSON.parse(raw))
-        setState(migrated ?? createSeedState())
+        setState(migrated ?? emptyState())
       } else {
-        setState(createSeedState())
+        setState(emptyState())
       }
     } catch {
-      setState(createSeedState())
+      setState(emptyState())
     }
     setReady(true)
   }, [])
@@ -519,6 +533,28 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
         } catch {
           return { ok: false, message: "Не удалось прочитать JSON." }
         }
+      },
+      demoSetCount: () => countDemoSets(state),
+      removeDemoSets: () => {
+        const doomed = state.sets.filter((set) => isUntouchedDemo(set, state))
+        if (!doomed.length) return 0
+        const ids = new Set(doomed.map((set) => set.id))
+        setState((prev) => {
+          const progress = { ...prev.progress }
+          const deleted = { ...prev.deleted }
+          for (const id of ids) {
+            delete progress[id]
+            deleted[id] = Date.now()
+          }
+          return {
+            ...prev,
+            sets: prev.sets.filter((set) => !ids.has(set.id)),
+            recent: prev.recent.filter((id) => !ids.has(id)),
+            progress,
+            deleted,
+          }
+        })
+        return doomed.length
       },
       resetAll: (withDemo) => {
         setState(withDemo ? createSeedState() : emptyState())

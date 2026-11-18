@@ -3,7 +3,7 @@
 import * as React from "react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
-import { BookOpen, FolderPlus, Languages, Plus, Search, Upload, X } from "lucide-react"
+import { BookOpen, FolderPlus, Languages, Plus, ScanText, Search, Upload, X } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import {
@@ -97,6 +97,10 @@ export function AppHeader() {
                 Готовый курс немецкого
               </DropdownMenuItem>
               <DropdownMenuSeparator />
+              <DropdownMenuItem onClick={() => router.push("/import")}>
+                <ScanText className="size-4" />
+                Импорт со скриншота
+              </DropdownMenuItem>
               <DropdownMenuItem onClick={() => router.push("/settings#import")}>
                 <Upload className="size-4" />
                 Импорт из файла

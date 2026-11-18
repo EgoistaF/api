@@ -25,3 +25,6 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+# generated from node_modules by scripts/prepare-ocr-assets.mjs
+/public/tessdata
+/public/tesseract
