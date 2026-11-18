@@ -2,11 +2,10 @@
 
 import * as React from "react"
 import Link from "next/link"
-import { usePathname, useRouter } from "next/navigation"
-import { BookOpen, CalendarCheck, CloudOff, FolderPlus, Languages, Library, Loader2, Menu, Plus, Search, Settings, Sparkles, Upload, User, X, Zap } from "lucide-react"
+import { useRouter } from "next/navigation"
+import { BookOpen, FolderPlus, Languages, Plus, Search, Upload, X } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { ThemeToggle } from "@/components/theme-toggle"
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -14,28 +13,16 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
-import { Sheet, SheetContent, SheetTitle, SheetTrigger } from "@/components/ui/sheet"
-import { cn } from "@/lib/utils"
-import { useStore } from "@/lib/store"
 
-const NAV = [
-  { href: "/", label: "Главная", icon: BookOpen },
-  { href: "/review", label: "Повторение", icon: CalendarCheck },
-  { href: "/library", label: "Библиотека", icon: Library },
-  { href: "/stats", label: "Прогресс", icon: Sparkles },
-  { href: "/catalog", label: "Каталог", icon: Languages },
-  { href: "/articles", label: "Артикли", icon: Zap },
-]
-
+/**
+ * Slim top bar: search and creating. Getting around is the navigation's job —
+ * the sidebar on a wide screen, the tab bar on a phone.
+ */
 export function AppHeader() {
-  const pathname = usePathname()
   const router = useRouter()
-  const { account, syncStatus } = useStore()
   const [query, setQuery] = React.useState("")
-  const [mobileOpen, setMobileOpen] = React.useState(false)
   const searchRef = React.useRef<HTMLInputElement>(null)
 
-  // `/` focuses search, like on Quizlet
   React.useEffect(() => {
     function onKey(event: KeyboardEvent) {
       const target = event.target as HTMLElement | null
@@ -55,94 +42,22 @@ export function AppHeader() {
     router.push(trimmed ? `/search?q=${encodeURIComponent(trimmed)}` : "/search")
   }
 
-  const isStudyRoute = /\/(flashcards|learn|write|spell|test|match)$/.test(pathname)
-  if (isStudyRoute) return null
-
   return (
-    <header className="sticky top-0 z-40 border-b bg-card/95 backdrop-blur supports-[backdrop-filter]:bg-card/80">
-      <div className="mx-auto flex h-16 max-w-7xl items-center gap-3 px-4 sm:px-6">
-        <Sheet open={mobileOpen} onOpenChange={setMobileOpen}>
-          <SheetTrigger asChild>
-            <Button variant="ghost" size="icon" className="md:hidden" aria-label="Меню">
-              <Menu className="size-5" />
-            </Button>
-          </SheetTrigger>
-          <SheetContent side="left" className="w-72 p-0">
-            <SheetTitle className="px-5 pt-5 text-lg">QuizMaster</SheetTitle>
-            <nav className="mt-4 flex flex-col gap-1 px-3">
-              {NAV.map((item) => (
-                <Link
-                  key={item.href}
-                  href={item.href}
-                  onClick={() => setMobileOpen(false)}
-                  className={cn(
-                    "flex items-center gap-3 rounded-md px-3 py-2.5 text-sm font-semibold transition-colors hover:bg-secondary",
-                    pathname === item.href && "bg-accent text-accent-foreground",
-                  )}
-                >
-                  <item.icon className="size-4" />
-                  {item.label}
-                </Link>
-              ))}
-              <Link
-                href="/account"
-                onClick={() => setMobileOpen(false)}
-                className={cn(
-                  "flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-semibold transition-colors hover:bg-secondary",
-                  pathname === "/account" && "bg-accent text-accent-foreground",
-                )}
-              >
-                <User className="size-4" />
-                {account ? account.displayName : "Войти в профиль"}
-              </Link>
-              <Link
-                href="/settings"
-                onClick={() => setMobileOpen(false)}
-                className="flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-semibold transition-colors hover:bg-secondary"
-              >
-                <Settings className="size-4" />
-                Настройки
-              </Link>
-              <Link
-                href="/create"
-                onClick={() => setMobileOpen(false)}
-                className="mt-3 flex items-center justify-center gap-2 rounded-lg bg-primary px-3 py-2.5 text-sm font-bold text-primary-foreground"
-              >
-                <Plus className="size-4" />
-                Создать модуль
-              </Link>
-            </nav>
-          </SheetContent>
-        </Sheet>
-
-        <Link href="/" className="flex shrink-0 items-center gap-2">
-          <span className="grid size-8 place-items-center rounded-lg bg-primary text-sm font-black text-primary-foreground">Q</span>
-          <span className="hidden text-lg font-extrabold tracking-tight sm:inline">QuizMaster</span>
+    <header className="sticky top-0 z-30 border-b bg-card/95 backdrop-blur supports-[backdrop-filter]:bg-card/80">
+      <div className="mx-auto flex h-14 max-w-5xl items-center gap-3 px-4 sm:px-6">
+        <Link href="/" className="flex shrink-0 items-center gap-2 lg:hidden">
+          <span className="grid size-8 place-items-center rounded-md bg-primary text-sm font-black text-primary-foreground">Q</span>
+          <span className="display-type hidden text-base font-extrabold sm:inline">QuizMaster</span>
         </Link>
 
-        <nav className="hidden items-center gap-1 md:flex">
-          {NAV.map((item) => (
-            <Link
-              key={item.href}
-              href={item.href}
-              className={cn(
-                "rounded-md px-3 py-2 text-sm font-bold text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground",
-                pathname === item.href && "bg-accent text-accent-foreground",
-              )}
-            >
-              {item.label}
-            </Link>
-          ))}
-        </nav>
-
-        <form onSubmit={submitSearch} className="relative ml-auto hidden max-w-md flex-1 sm:block">
+        <form onSubmit={submitSearch} className="relative ml-auto hidden max-w-md flex-1 sm:block lg:ml-0">
           <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
           <Input
             ref={searchRef}
             value={query}
             onChange={(event) => setQuery(event.target.value)}
             placeholder="Поиск модулей и терминов  ( / )"
-            className="h-10 rounded-full border-transparent bg-muted pl-9 pr-9 focus-visible:bg-card"
+            className="h-10 rounded-md border-transparent bg-muted pl-9 pr-9 focus-visible:bg-card"
             aria-label="Поиск"
           />
           {query && (
@@ -161,31 +76,9 @@ export function AppHeader() {
           <Button variant="ghost" size="icon" className="sm:hidden" onClick={() => router.push("/search")} aria-label="Поиск">
             <Search className="size-5" />
           </Button>
-          <Button
-            variant="ghost"
-            size="icon"
-            className="relative rounded-full"
-            aria-label={account ? `Профиль ${account.displayName}` : "Войти в профиль"}
-            onClick={() => router.push("/account")}
-          >
-            {account ? (
-              <span className="grid size-7 place-items-center rounded-full bg-primary text-xs font-black text-primary-foreground">
-                {account.displayName.slice(0, 1).toUpperCase()}
-              </span>
-            ) : (
-              <User className="size-5" />
-            )}
-            {account && syncStatus === "saving" && (
-              <Loader2 className="absolute -bottom-0.5 -right-0.5 size-3.5 animate-spin rounded-full bg-card text-primary" />
-            )}
-            {account && syncStatus === "error" && (
-              <CloudOff className="absolute -bottom-0.5 -right-0.5 size-3.5 rounded-full bg-card text-destructive" />
-            )}
-          </Button>
-          <ThemeToggle />
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button className="h-10 gap-1.5 rounded-full px-3 font-bold sm:px-4">
+              <Button className="h-10 gap-1.5 rounded-md px-3 font-bold sm:px-4">
                 <Plus className="size-4" />
                 <span className="hidden sm:inline">Создать</span>
               </Button>

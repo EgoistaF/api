@@ -4,7 +4,7 @@ import { Geist, Geist_Mono } from "next/font/google"
 import { Analytics } from "@vercel/analytics/next"
 import { ThemeProvider } from "@/components/theme-provider"
 import { StoreProvider } from "@/lib/store"
-import { AppHeader } from "@/components/app-header"
+import { AppShell } from "@/components/app-shell"
 import { Toaster } from "@/components/ui/sonner"
 import "./globals.css"
 
@@ -37,10 +37,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
       <body className={`${geist.variable} ${geistMono.variable} font-sans antialiased`}>
         <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
           <StoreProvider>
-            <div className="flex min-h-dvh flex-col">
-              <AppHeader />
-              <main className="flex-1">{children}</main>
-            </div>
+            <AppShell>{children}</AppShell>
             <Toaster position="top-center" />
           </StoreProvider>
         </ThemeProvider>
