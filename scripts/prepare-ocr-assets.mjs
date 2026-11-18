@@ -6,11 +6,25 @@
  * its own origin instead of depending on a third-party CDN.
  */
 import { copyFileSync, mkdirSync, existsSync, statSync } from "node:fs"
+import { createRequire } from "node:module"
 import path from "node:path"
 
 const ROOT = path.resolve(import.meta.dirname, "..")
-const from = (...parts) => path.join(ROOT, "node_modules", ...parts)
+const require = createRequire(import.meta.url)
 const to = (...parts) => path.join(ROOT, "public", ...parts)
+
+/**
+ * Resolved through the module system rather than by guessing a path inside
+ * node_modules: pnpm does not hoist, so "node_modules/<pkg>" only exists for
+ * some installs.
+ */
+function from(spec) {
+  const slash = spec.indexOf("/")
+  const pkg = spec.startsWith("@") ? spec.split("/").slice(0, 2).join("/") : spec.slice(0, slash)
+  const rest = spec.slice(pkg.length + 1)
+  const base = path.dirname(require.resolve(`${pkg}/package.json`))
+  return path.join(base, rest)
+}
 
 /** best_int: markedly more accurate than fast, a fraction of the size of best. */
 const FILES = [
