@@ -119,7 +119,7 @@ export default function MatchPage() {
       <StudyShell setId={set.id} title={set.title} subtitle="Подбор">
         <div className="mx-auto max-w-lg px-4 py-14 text-center">
           <Timer className="mx-auto size-12 text-primary" />
-          <h2 className="mt-4 text-2xl font-extrabold">Игра «Подбор»</h2>
+          <h2 className="display-type mt-4 text-2xl font-extrabold">Игра «Подбор»</h2>
           <p className="mt-2 text-sm text-muted-foreground">
             Соедините термины с определениями как можно быстрее. За ошибку — штраф 1 секунда.
           </p>
@@ -161,7 +161,7 @@ export default function MatchPage() {
         <Confetti active />
         <div className="mx-auto max-w-lg px-4 py-14 text-center">
           <Trophy className="mx-auto size-12 text-accent" />
-          <h2 className="mt-4 text-2xl font-extrabold">{isRecord ? "Новый рекорд!" : "Готово!"}</h2>
+          <h2 className="display-type mt-4 text-2xl font-extrabold">{isRecord ? "Новый рекорд!" : "Готово!"}</h2>
           <p className="mt-3 text-5xl font-extrabold tabular-nums text-primary">{formatTime(finalTime)}</p>
           {penalty > 0 && <p className="mt-2 text-sm text-muted-foreground">Включая штраф {formatTime(penalty)} за ошибки</p>}
           {best !== null && !isRecord && <p className="mt-2 text-sm text-muted-foreground">Рекорд: {formatTime(best)}</p>}

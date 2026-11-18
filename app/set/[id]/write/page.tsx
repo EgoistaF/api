@@ -100,7 +100,7 @@ export default function WritePage() {
         <Confetti active={percent >= 80} />
         <div className="mx-auto max-w-lg px-4 py-14 text-center">
           <Trophy className={`mx-auto size-12 ${percent >= 80 ? "text-accent" : "text-muted-foreground"}`} />
-          <h2 className="mt-4 text-2xl font-extrabold">Результат: {percent}%</h2>
+          <h2 className="display-type mt-4 text-2xl font-extrabold">Результат: {percent}%</h2>
           <p className="mt-2 text-sm text-muted-foreground">
             Верно {stats.correct} из {total}
           </p>

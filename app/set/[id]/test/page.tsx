@@ -177,7 +177,7 @@ export default function TestPage() {
     return (
       <StudyShell setId={set.id} title={set.title} subtitle="Тест">
         <div className="mx-auto max-w-xl px-4 py-10">
-          <h2 className="text-2xl font-extrabold">Настройте тест</h2>
+          <h2 className="display-type text-2xl font-extrabold">Настройте тест</h2>
           <p className="mt-1 text-sm text-muted-foreground">
             В модуле {set.terms.length} терминов{starredOnly && ` · избранных: ${pool.length}`}
           </p>

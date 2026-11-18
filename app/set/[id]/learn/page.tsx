@@ -171,13 +171,13 @@ export default function LearnPage() {
           {allMastered ? (
             <>
               <Trophy className="mx-auto size-12 text-accent" />
-              <h2 className="mt-4 text-2xl font-extrabold">Модуль освоен на 100%</h2>
+              <h2 className="display-type mt-4 text-2xl font-extrabold">Модуль освоен на 100%</h2>
               <p className="mt-2 text-sm text-muted-foreground">Все {pool.length} терминов в долговременной памяти. Проверьте себя тестом.</p>
             </>
           ) : (
             <>
               <Sparkles className="mx-auto size-12 text-primary" />
-              <h2 className="mt-4 text-2xl font-extrabold">Раунд {roundNumber} завершён</h2>
+              <h2 className="display-type mt-4 text-2xl font-extrabold">Раунд {roundNumber} завершён</h2>
               <p className="mt-2 text-sm text-muted-foreground">Освоено материала: {mastery.percent}%</p>
             </>
           )}

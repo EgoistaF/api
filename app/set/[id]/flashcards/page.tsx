@@ -148,7 +148,7 @@ export default function FlashcardsPage() {
       <StudyShell setId={set.id} title={set.title} subtitle="Карточки · итоги" progress={100}>
         <Confetti active={known.size > 0 && known.size >= unknown.size} />
         <div className="mx-auto max-w-lg px-4 py-16 text-center">
-          <h2 className="text-2xl font-extrabold">Вы просмотрели все карточки</h2>
+          <h2 className="display-type text-2xl font-extrabold">Вы просмотрели все карточки</h2>
           {total > 0 && (
             <div className="mt-6 grid grid-cols-2 gap-4">
               <div className="rounded-xl border bg-card p-5">

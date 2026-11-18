@@ -406,7 +406,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
           sets: prev.sets.map((set) => (set.id === setId ? { ...set, terms: set.terms.map((term) => ({ ...term, starred })) } : set)),
         }))
       },
-      createFolder: (name, color = "#4255ff") => {
+      createFolder: (name, color = "#18181b") => {
         const folder: Folder = { id: makeId("f"), name: name.trim() || "Новая папка", color, createdAt: Date.now() }
         setState((prev) => ({ ...prev, folders: [...prev.folders, folder] }))
         return folder.id

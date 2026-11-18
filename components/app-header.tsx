@@ -76,8 +76,8 @@ export function AppHeader() {
                   href={item.href}
                   onClick={() => setMobileOpen(false)}
                   className={cn(
-                    "flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-semibold transition-colors hover:bg-secondary",
-                    pathname === item.href && "bg-secondary text-primary",
+                    "flex items-center gap-3 rounded-md px-3 py-2.5 text-sm font-semibold transition-colors hover:bg-secondary",
+                    pathname === item.href && "bg-accent text-accent-foreground",
                   )}
                 >
                   <item.icon className="size-4" />
@@ -89,7 +89,7 @@ export function AppHeader() {
                 onClick={() => setMobileOpen(false)}
                 className={cn(
                   "flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-semibold transition-colors hover:bg-secondary",
-                  pathname === "/account" && "bg-secondary text-primary",
+                  pathname === "/account" && "bg-accent text-accent-foreground",
                 )}
               >
                 <User className="size-4" />
@@ -126,8 +126,8 @@ export function AppHeader() {
               key={item.href}
               href={item.href}
               className={cn(
-                "rounded-lg px-3 py-2 text-sm font-bold text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground",
-                pathname === item.href && "bg-secondary text-primary",
+                "rounded-md px-3 py-2 text-sm font-bold text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground",
+                pathname === item.href && "bg-accent text-accent-foreground",
               )}
             >
               {item.label}

@@ -98,12 +98,12 @@ export const DEFAULT_SETTINGS: Settings = {
 }
 
 export const FOLDER_COLORS = [
-  "#4255ff",
-  "#0ea5e9",
-  "#22c55e",
-  "#f59e0b",
-  "#ef4444",
-  "#a855f7",
-  "#ec4899",
-  "#14b8a6",
+  "#18181b",
+  "#1b4ee8",
+  "#118a4e",
+  "#ffd400",
+  "#c81e1e",
+  "#6d28d9",
+  "#be1558",
+  "#0f766e",
 ]

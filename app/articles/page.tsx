@@ -97,7 +97,7 @@ export default function ArticlesPage() {
           <span className="mx-auto grid size-12 place-items-center rounded-xl bg-primary/10 text-primary">
             <Zap className="size-6" />
           </span>
-          <h1 className="mt-4 text-2xl font-extrabold tracking-tight">Тренажёр артиклей</h1>
+          <h1 className="display-type mt-4 text-2xl font-extrabold tracking-tight">Тренажёр артиклей</h1>
           <p className="mt-1.5 text-sm text-muted-foreground">
             Артикль нужно знать вместе со словом. Быстрые подходы по {ROUND} существительных закрепляют род лучше, чем
             заучивание списком.

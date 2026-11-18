@@ -117,7 +117,7 @@ export function SetEditor({ existing }: { existing?: StudySet }) {
   return (
     <div className="mx-auto max-w-4xl px-4 py-8 sm:px-6">
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <h1 className="text-2xl font-extrabold tracking-tight">{existing ? "Редактировать модуль" : "Новый учебный модуль"}</h1>
+        <h1 className="display-type text-2xl font-extrabold tracking-tight">{existing ? "Редактировать модуль" : "Новый учебный модуль"}</h1>
         <div className="flex gap-2">
           <ImportDialog
             open={importOpen}

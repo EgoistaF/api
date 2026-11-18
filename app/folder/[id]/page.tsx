@@ -19,7 +19,7 @@ export default function FolderPage() {
   if (!folder) {
     return (
       <div className="mx-auto max-w-md px-4 py-20 text-center">
-        <h1 className="text-xl font-extrabold">Папка не найдена</h1>
+        <h1 className="display-type text-xl font-extrabold">Папка не найдена</h1>
         <Button asChild className="mt-6 rounded-full font-bold">
           <Link href="/library">В библиотеку</Link>
         </Button>

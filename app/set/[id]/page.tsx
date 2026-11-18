@@ -272,7 +272,7 @@ export default function SetPage() {
       {/* Term list */}
       <div className="mt-10">
         <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
-          <h2 className="text-lg font-extrabold">Термины в модуле ({set.terms.length})</h2>
+          <h2 className="display-type text-lg font-extrabold">Термины в модуле ({set.terms.length})</h2>
           <div className="flex gap-2">
             {starredCount > 0 && (
               <Button variant="ghost" size="sm" className="font-bold" onClick={() => starAll(set.id, false)}>
@@ -335,7 +335,7 @@ export default function SetPage() {
 
       {progress.testHistory.length > 0 && (
         <div className="mt-10">
-          <h2 className="mb-3 text-lg font-extrabold">История тестов</h2>
+          <h2 className="display-type mb-3 text-lg font-extrabold">История тестов</h2>
           <div className="space-y-2">
             {progress.testHistory.slice(0, 8).map((result, index) => (
               <div key={index} className="flex items-center justify-between rounded-lg border bg-card px-4 py-3 text-sm">

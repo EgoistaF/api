@@ -52,13 +52,13 @@ export default function SettingsPage() {
 
   return (
     <div className="mx-auto max-w-2xl px-4 py-8 sm:px-6">
-      <h1 className="text-2xl font-extrabold tracking-tight">Настройки</h1>
+      <h1 className="display-type text-2xl font-extrabold tracking-tight">Настройки</h1>
       <p className="mt-1 text-sm text-muted-foreground">
         Все данные хранятся только в этом браузере — аккаунт и подписка не нужны.
       </p>
 
       <section className="mt-6 space-y-5 rounded-xl border bg-card p-5">
-        <h2 className="font-extrabold">Изучение</h2>
+        <h2 className="display-type font-extrabold">Изучение</h2>
         <Row label="Озвучка терминов" hint="Показывать кнопку синтеза речи">
           <Switch checked={state.settings.ttsEnabled} onCheckedChange={(checked) => updateSettings({ ttsEnabled: checked })} />
         </Row>
@@ -96,7 +96,7 @@ export default function SettingsPage() {
       </section>
 
       <section id="import" className="mt-6 space-y-4 rounded-xl border bg-card p-5 scroll-mt-20">
-        <h2 className="font-extrabold">Данные</h2>
+        <h2 className="display-type font-extrabold">Данные</h2>
         <p className="text-sm text-muted-foreground">
           Сохраните копию, чтобы перенести модули на другое устройство или в другой браузер.
         </p>
@@ -140,7 +140,7 @@ export default function SettingsPage() {
       </section>
 
       <section className="mt-6 space-y-4 rounded-xl border bg-card p-5">
-        <h2 className="font-extrabold">Сброс</h2>
+        <h2 className="display-type font-extrabold">Сброс</h2>
         <div className="flex flex-wrap gap-2">
           <AlertDialog>
             <AlertDialogTrigger asChild>

@@ -47,7 +47,7 @@ function SearchResults() {
 
   return (
     <div className="mx-auto max-w-5xl px-4 py-8 sm:px-6">
-      <h1 className="text-2xl font-extrabold tracking-tight">Поиск</h1>
+      <h1 className="display-type text-2xl font-extrabold tracking-tight">Поиск</h1>
       <div className="relative mt-4">
         <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
         <Input
@@ -70,7 +70,7 @@ function SearchResults() {
 
           {setHits.length > 0 && (
             <section className="mt-6">
-              <h2 className="mb-3 text-lg font-extrabold">Модули</h2>
+              <h2 className="display-type mb-3 text-lg font-extrabold">Модули</h2>
               <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
                 {setHits.map((set) => (
                   <SetCard key={set.id} set={set} compact />
@@ -81,7 +81,7 @@ function SearchResults() {
 
           {termHits.length > 0 && (
             <section className="mt-8">
-              <h2 className="mb-3 text-lg font-extrabold">Термины</h2>
+              <h2 className="display-type mb-3 text-lg font-extrabold">Термины</h2>
               <div className="space-y-2">
                 {termHits.map((hit, index) => (
                   <Link

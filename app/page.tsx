@@ -70,7 +70,7 @@ export default function HomePage() {
           )}
         </div>
 
-        <h1 className="mt-4 max-w-2xl text-3xl font-extrabold leading-tight tracking-tight text-balance sm:text-4xl">
+        <h1 className="display-type mt-4 max-w-2xl text-3xl font-extrabold leading-tight tracking-tight text-balance sm:text-4xl">
           {continueSet ? "Продолжите с того места, где остановились" : "Создайте первый модуль и начните учить"}
         </h1>
 
@@ -172,7 +172,7 @@ export default function HomePage() {
       {/* Folders */}
       {state.folders.length > 0 && (
         <section className="mt-10">
-          <h2 className="mb-3 text-lg font-extrabold">Папки</h2>
+          <h2 className="display-type mb-3 text-lg font-extrabold">Папки</h2>
           <div className="flex gap-3 overflow-x-auto pb-2 no-scrollbar">
             {state.folders.map((folder) => {
               const count = state.sets.filter((set) => set.folderId === folder.id).length
@@ -199,7 +199,7 @@ export default function HomePage() {
       {/* Recent sets */}
       <section className="mt-10">
         <div className="mb-3 flex items-center justify-between">
-          <h2 className="text-lg font-extrabold">Недавние модули</h2>
+          <h2 className="display-type text-lg font-extrabold">Недавние модули</h2>
           <Button asChild variant="ghost" className="font-bold">
             <Link href="/library">
               Вся библиотека
@@ -226,7 +226,7 @@ export default function HomePage() {
 
       {/* Modes overview */}
       <section className="mt-12">
-        <h2 className="mb-1 text-lg font-extrabold">6 режимов изучения</h2>
+        <h2 className="display-type mb-1 text-lg font-extrabold">6 режимов изучения</h2>
         <p className="mb-4 text-sm text-muted-foreground">Доступны в каждом модуле, без ограничений.</p>
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {MODES.map((mode) => (

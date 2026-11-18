@@ -106,8 +106,9 @@ export function collectArticleCards(state: AppState): ArticleCard[] {
   return out
 }
 
+/** Follows the theme: each token has a light and a dark value. */
 export const ARTICLE_COLORS: Record<"der" | "die" | "das", string> = {
-  der: "#2563eb",
-  die: "#e11d48",
-  das: "#16a34a",
+  der: "var(--chart-4)",
+  die: "var(--destructive)",
+  das: "var(--chart-2)",
 }

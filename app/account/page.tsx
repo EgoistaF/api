@@ -137,7 +137,7 @@ export default function AccountPage() {
         <span className="mx-auto grid size-12 place-items-center rounded-xl bg-primary/10 text-primary">
           <ShieldCheck className="size-6" />
         </span>
-        <h1 className="mt-4 text-2xl font-extrabold tracking-tight">Профиль</h1>
+        <h1 className="display-type mt-4 text-2xl font-extrabold tracking-tight">Профиль</h1>
         <p className="mt-1.5 text-sm text-muted-foreground">
           Чтобы прогресс не терялся при смене браузера или устройства, создайте профиль — модули и статистика будут
           сохраняться на сервере.

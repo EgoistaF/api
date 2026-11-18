@@ -85,7 +85,7 @@ export default function ReviewPage() {
           <span className="mx-auto grid size-12 place-items-center rounded-xl bg-primary/10 text-primary">
             <CalendarCheck className="size-6" />
           </span>
-          <h1 className="mt-4 text-2xl font-extrabold tracking-tight">Повторение по расписанию</h1>
+          <h1 className="display-type mt-4 text-2xl font-extrabold tracking-tight">Повторение по расписанию</h1>
           <p className="mt-1.5 text-sm text-muted-foreground">
             Карточка возвращается всё реже: через 1, 2, 4, 8 и 21 день. Так слова уходят в долговременную память.
           </p>

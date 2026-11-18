@@ -37,8 +37,8 @@ function buildSet(
 }
 
 export function createSeedState(): AppState {
-  const languages = { id: makeId("f"), name: "Языки", color: "#4255ff", createdAt: Date.now() }
-  const science = { id: makeId("f"), name: "Наука", color: "#22c55e", createdAt: Date.now() }
+  const languages = { id: makeId("f"), name: "Языки", color: "#1b4ee8", createdAt: Date.now() }
+  const science = { id: makeId("f"), name: "Наука", color: "#118a4e", createdAt: Date.now() }
 
   const sets: StudySet[] = [
     buildSet(

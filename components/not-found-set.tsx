@@ -6,7 +6,7 @@ export function NotFoundSet() {
   return (
     <div className="mx-auto max-w-md px-4 py-20 text-center">
       <SearchX className="mx-auto size-10 text-muted-foreground" />
-      <h1 className="mt-4 text-xl font-extrabold">Модуль не найден</h1>
+      <h1 className="display-type mt-4 text-xl font-extrabold">Модуль не найден</h1>
       <p className="mt-2 text-sm text-muted-foreground">
         Возможно, он был удалён или вы открыли ссылку на другом устройстве — данные хранятся локально в браузере.
       </p>

@@ -2,7 +2,7 @@
 
 import * as React from "react"
 
-const COLORS = ["#4255ff", "#ffcd1f", "#23b26d", "#a855f7", "#ff6b81", "#0ea5e9"]
+const COLORS = ["#ffd400", "#18181b", "#1b4ee8", "#118a4e", "#c81e1e", "#f5f5f4"]
 
 export function Confetti({ active, pieces = 70 }: { active: boolean; pieces?: number }) {
   const [items, setItems] = React.useState<{ id: number; left: number; delay: number; duration: number; color: string }[]>([])

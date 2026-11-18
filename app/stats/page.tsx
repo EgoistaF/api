@@ -41,7 +41,7 @@ export default function StatsPage() {
 
   return (
     <div className="mx-auto max-w-5xl px-4 py-8 sm:px-6">
-      <h1 className="text-2xl font-extrabold tracking-tight">Ваш прогресс</h1>
+      <h1 className="display-type text-2xl font-extrabold tracking-tight">Ваш прогресс</h1>
       <p className="mt-1 text-sm text-muted-foreground">Статистика считается локально в этом браузере.</p>
 
       <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
@@ -57,7 +57,7 @@ export default function StatsPage() {
       </div>
 
       <section className="mt-8 rounded-xl border bg-card p-5">
-        <h2 className="font-extrabold">Активность за 12 недель</h2>
+        <h2 className="display-type font-extrabold">Активность за 12 недель</h2>
         <div className="mt-4 grid grid-flow-col grid-rows-7 gap-1" style={{ gridAutoColumns: "minmax(0, 1fr)" }}>
           {days.map((day) => (
             <div
@@ -74,7 +74,7 @@ export default function StatsPage() {
 
       {weakest.length > 0 && (
         <section className="mt-8">
-          <h2 className="mb-3 text-lg font-extrabold">Стоит подтянуть</h2>
+          <h2 className="display-type mb-3 text-lg font-extrabold">Стоит подтянуть</h2>
           <div className="space-y-2">
             {weakest.map((entry) => (
               <div key={entry.set.id} className="flex flex-wrap items-center justify-between gap-3 rounded-xl border bg-card p-4">
@@ -94,7 +94,7 @@ export default function StatsPage() {
       )}
 
       <section className="mt-8">
-        <h2 className="mb-3 text-lg font-extrabold">Все модули</h2>
+        <h2 className="display-type mb-3 text-lg font-extrabold">Все модули</h2>
         {ranked.length ? (
           <div className="space-y-2">
             {ranked.map((entry) => (

@@ -107,7 +107,7 @@ export default function CatalogPage() {
           <Languages className="size-6" />
         </span>
         <div>
-          <h1 className="text-2xl font-extrabold tracking-tight">Готовый курс немецкого A1 → C1</h1>
+          <h1 className="display-type text-2xl font-extrabold tracking-tight">Готовый курс немецкого A1 → C1</h1>
           <p className="mt-1 text-sm text-muted-foreground">
             {DEUTSCH_COURSE.length} модулей · {totalPairs(DEUTSCH_COURSE)} карточек · лексика, грамматика и речевые обороты
           </p>
@@ -115,7 +115,7 @@ export default function CatalogPage() {
       </div>
 
       <div className="mt-6 rounded-xl border bg-card p-5">
-        <h2 className="font-extrabold">Куда добавить</h2>
+        <h2 className="display-type font-extrabold">Куда добавить</h2>
         <div className="mt-3 grid gap-3 sm:grid-cols-2">
           <div className="space-y-1.5">
             <Label>Папка</Label>
