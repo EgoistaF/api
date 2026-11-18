@@ -69,14 +69,46 @@ export async function listJson<T>(prefix: string, limit = 20): Promise<T[]> {
   return results.filter((item): item is Awaited<T> => item !== null) as T[]
 }
 
-/** Reports whether storage is reachable, without touching any user data. */
-export async function storageReachable() {
+/** Reports whether storage is readable, without touching any user data. */
+export async function storageReadable() {
   try {
     await list({ prefix: "healthcheck/", limit: 1 })
     return true
   } catch {
     return false
   }
+}
+
+/**
+ * Reports whether storage actually accepts writes.
+ *
+ * Reads succeed even against a store that no longer exists — they just come
+ * back empty — so a read-only check reports healthy while every sign-up
+ * fails. The probe overwrites one fixed file and is throttled per instance
+ * so it cannot be used to run up writes.
+ */
+const WRITE_PROBE_PATH = "healthcheck/ping.json"
+const WRITE_PROBE_TTL = 60_000
+let lastWriteProbe: { at: number; ok: boolean } | null = null
+
+export async function storageWritable() {
+  const now = Date.now()
+  if (lastWriteProbe && now - lastWriteProbe.at < WRITE_PROBE_TTL) return lastWriteProbe.ok
+  let ok = false
+  try {
+    await put(WRITE_PROBE_PATH, JSON.stringify({ at: now }), {
+      access: "public",
+      addRandomSuffix: false,
+      allowOverwrite: true,
+      contentType: "application/json",
+      cacheControlMaxAge: MIN_CACHE_SECONDS,
+    })
+    ok = true
+  } catch (cause) {
+    console.error("[storage] write probe failed", cause)
+  }
+  lastWriteProbe = { at: now, ok }
+  return ok
 }
 
 export type UserRecord = {

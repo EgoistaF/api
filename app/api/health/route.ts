@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server"
-import { storageReachable } from "@/lib/server/blob-store"
+import { storageReadable, storageWritable } from "@/lib/server/blob-store"
 
 export const runtime = "nodejs"
 export const dynamic = "force-dynamic"
@@ -11,11 +11,13 @@ export const dynamic = "force-dynamic"
 export async function GET() {
   const authSecret = Boolean(process.env.AUTH_SECRET)
   const blobToken = Boolean(process.env.BLOB_READ_WRITE_TOKEN)
-  const storage = authSecret && blobToken ? await storageReachable() : false
+  const configured = authSecret && blobToken
+  const [read, write] = configured ? await Promise.all([storageReadable(), storageWritable()]) : [false, false]
   return NextResponse.json({
-    ok: authSecret && blobToken && storage,
+    ok: configured && read && write,
     authSecret,
     blobToken,
-    storage,
+    storageRead: read,
+    storageWrite: write,
   })
 }
