@@ -7,7 +7,7 @@
     "dev": "next dev",
     "lint": "eslint .",
     "start": "next start",
-    "check": "node --experimental-strip-types --no-warnings scripts/check-answers.mjs",
+    "check": "node --experimental-strip-types --no-warnings scripts/check-answers.mjs && node --experimental-strip-types --no-warnings scripts/check-verbs.mjs",
     "prebuild": "node scripts/prepare-ocr-assets.mjs",
     "predev": "node scripts/prepare-ocr-assets.mjs"
   },
