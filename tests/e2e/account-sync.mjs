@@ -14,8 +14,13 @@ async function device(browser, label) {
 const readState = (page) => page.evaluate(() => JSON.parse(localStorage.getItem('quizmaster.state.v1') || '{}'))
 
 ;(async () => {
-  // Nothing here can pass while the profile store refuses writes.
-  const health = await fetch(BASE + "/api/health").then((r) => r.json()).catch(() => null)
+  // Nothing here can pass while the profile store refuses writes. Asked
+  // through a browser page, because Node's fetch does not share its proxy.
+  const probe = await chromium.launch()
+  const probePage = await (await probe.newContext()).newPage()
+  await probePage.goto(BASE + "/", { waitUntil: "domcontentloaded" })
+  const health = await probePage.evaluate(() => fetch("/api/health").then((r) => r.json()).catch(() => null))
+  await probe.close()
   if (!health?.ok) {
     console.log("SKIP profile storage is unavailable (" + JSON.stringify(health) + ")")
     return

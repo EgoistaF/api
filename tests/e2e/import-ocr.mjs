@@ -24,8 +24,8 @@ const EXPECTED = [
 
   await step('engine assets are served from this origin', async () => {
     for (const path of ['/tesseract/worker.min.js', '/tessdata/deu.traineddata.gz', '/tessdata/rus.traineddata.gz', '/tesseract/tesseract-core-simd-lstm.wasm.js']) {
-      const r = await page.request.get(BASE + path)
-      if (!r.ok()) throw new Error(path + ' -> HTTP ' + r.status())
+      const ok = await page.evaluate((url) => fetch(url).then((r) => r.ok).catch(() => false), BASE + path)
+      if (!ok) throw new Error(path + ' could not be fetched')
     }
   })
 

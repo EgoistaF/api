@@ -16,6 +16,7 @@ const PULL_INTERVAL_MS = 5 * 60_000
 
 export type Account = { username: string; displayName: string }
 export type SyncStatus = "off" | "checking" | "synced" | "saving" | "error"
+export type AuthResult = { ok: boolean; error?: string; code?: string }
 
 type Ctx = {
   state: AppState
@@ -24,8 +25,8 @@ type Ctx = {
   account: Account | null
   syncStatus: SyncStatus
   lastSyncedAt: number | null
-  register: (username: string, password: string, displayName?: string) => Promise<{ ok: boolean; error?: string }>
-  login: (username: string, password: string) => Promise<{ ok: boolean; error?: string }>
+  register: (username: string, password: string, displayName?: string) => Promise<AuthResult>
+  login: (username: string, password: string) => Promise<AuthResult>
   logout: () => Promise<void>
   syncNow: () => Promise<void>
   /* sets */
@@ -278,9 +279,9 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(payload),
         })
-        const data = (await response.json().catch(() => ({}))) as { user?: Account; error?: string }
+        const data = (await response.json().catch(() => ({}))) as { user?: Account; error?: string; code?: string }
         if (!response.ok || !data.user) {
-          return { ok: false, error: data.error ?? "Не удалось связаться с сервером" }
+          return { ok: false, error: data.error ?? "Не удалось связаться с сервером", code: data.code }
         }
         setAccount(data.user)
         setSyncStatus("saving")

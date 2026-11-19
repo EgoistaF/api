@@ -52,6 +52,9 @@ export default function AccountPage() {
     setBusy(false)
     if (!result.ok) {
       setError(result.error ?? "Не получилось")
+      // A cold server has no failed write to report yet, so /api/health can
+      // say all is well right up until the first attempt proves otherwise.
+      if (result.code === "storage_unavailable") setServiceDown(true)
       return
     }
     setPassword("")

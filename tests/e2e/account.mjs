@@ -6,8 +6,15 @@ import { ARTIFACTS, BASE, chromium, devices, finish, note, seedCourse, step } fr
   const errs = []
   page.on('pageerror', (e) => errs.push(e.message.slice(0, 160)))
   
-  await step('account page warns that the service is down', async () => {
+  await step('the outage is surfaced, on opening or at the latest on trying', async () => {
     await page.goto(BASE + '/account', { waitUntil: 'networkidle' })
+    const health = await page.evaluate(() => fetch('/api/health').then((r) => r.json()).catch(() => null))
+    if (health?.ok) {
+      // A cold server has no failed write to report yet; the banner is then
+      // expected only after an attempt, which the next scenario checks.
+      note('health still reports ok; banner is checked after the attempt')
+      return
+    }
     await page.waitForSelector('text=Сервис профилей сейчас недоступен', { timeout: 15000 })
   })
   await page.screenshot({ path: ARTIFACTS + '/acct-down.png' })
@@ -25,6 +32,10 @@ import { ARTIFACTS, BASE, chromium, devices, finish, note, seedCourse, step } fr
     note('error shown: ' + text)
     if (/неверн/i.test(text)) throw new Error('outage reported as bad credentials: ' + text)
     if (!text) throw new Error('no error shown at all')
+    // Once an attempt has failed for storage, the page must say so plainly.
+    if (/недоступ/i.test(text) && !(await page.locator('text=Сервис профилей сейчас недоступен').count())) {
+      throw new Error('outage message shown but the banner never appeared')
+    }
   })
   await page.screenshot({ path: ARTIFACTS + '/acct-register-error.png' })
 
