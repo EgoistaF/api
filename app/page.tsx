@@ -6,7 +6,7 @@ import { ArrowRight, BookOpen, CalendarCheck, Flame, Folder, Gamepad2, Graduatio
 import { VERBS } from "@/lib/verbs/data"
 import { useStore } from "@/lib/store"
 import { masteryFor, streakFromDays } from "@/lib/srs"
-import { collectDue, formatDueIn, nextDueAt } from "@/lib/review"
+import { collectDue, collectDueVerbs, formatDueIn, nextDueAt } from "@/lib/review"
 import { plural } from "@/lib/text"
 import { SetCard } from "@/components/set-card"
 import { Button } from "@/components/ui/button"
@@ -32,7 +32,10 @@ export default function HomePage() {
     return [...recent, ...rest].slice(0, 8) as typeof state.sets
   }, [state.sets, state.recent])
 
-  const due = React.useMemo(() => (ready ? collectDue(state) : []), [state, ready])
+  const due = React.useMemo(
+    () => (ready ? [...collectDue(state), ...collectDueVerbs(state)] : []),
+    [state, ready],
+  )
   const upcoming = React.useMemo(() => (ready ? nextDueAt(state) : null), [state, ready])
 
   const continueSet = recentSets[0]

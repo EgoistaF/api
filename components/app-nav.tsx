@@ -20,7 +20,7 @@ import {
   User,
 } from "lucide-react"
 import { useStore } from "@/lib/store"
-import { collectDue } from "@/lib/review"
+import { collectDue, collectDueVerbs } from "@/lib/review"
 import { ThemeToggle } from "@/components/theme-toggle"
 import { Button } from "@/components/ui/button"
 import { Sheet, SheetContent, SheetTitle, SheetTrigger } from "@/components/ui/sheet"
@@ -50,7 +50,7 @@ function isActive(pathname: string, href: string) {
 /** Number of cards waiting for review, shown on the Повторение tab. */
 function useDueCount() {
   const { state, ready } = useStore()
-  return React.useMemo(() => (ready ? collectDue(state).length : 0), [state, ready])
+  return React.useMemo(() => (ready ? collectDue(state).length + collectDueVerbs(state).length : 0), [state, ready])
 }
 
 function SyncDot({ className }: { className?: string }) {

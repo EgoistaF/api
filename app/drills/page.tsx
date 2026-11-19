@@ -5,7 +5,7 @@ import Link from "next/link"
 import { ArrowRight, BookOpen, CalendarCheck, Dumbbell, Gamepad2, GraduationCap, Keyboard, Languages, Layers, Volume2, Zap } from "lucide-react"
 import { VERBS } from "@/lib/verbs/data"
 import { useStore } from "@/lib/store"
-import { collectArticleCards, collectDue, formatDueIn, nextDueAt } from "@/lib/review"
+import { collectArticleCards, collectDue, collectDueVerbs, formatDueIn, nextDueAt } from "@/lib/review"
 import { plural } from "@/lib/text"
 import { SetCard } from "@/components/set-card"
 import { Button } from "@/components/ui/button"
@@ -23,7 +23,7 @@ const SET_MODES = [
 export default function DrillsPage() {
   const { state, ready } = useStore()
 
-  const due = React.useMemo(() => (ready ? collectDue(state) : []), [state, ready])
+  const due = React.useMemo(() => (ready ? [...collectDue(state), ...collectDueVerbs(state)] : []), [state, ready])
   const upcoming = React.useMemo(() => (ready ? nextDueAt(state) : null), [state, ready])
   const nouns = React.useMemo(() => (ready ? collectArticleCards(state) : []), [state, ready])
 

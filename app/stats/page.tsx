@@ -2,9 +2,10 @@
 
 import * as React from "react"
 import Link from "next/link"
-import { Flame, GraduationCap, Layers, Target, Trophy } from "lucide-react"
+import { Flame, GraduationCap, Languages, Layers, Target, Trophy } from "lucide-react"
 import { useStore } from "@/lib/store"
 import { cardOf, dayKey, masteryFor, streakFromDays } from "@/lib/srs"
+import { verbMastery } from "@/lib/review"
 import { formatTime, plural } from "@/lib/text"
 import { Button } from "@/components/ui/button"
 import { Skeleton } from "@/components/ui/skeleton"
@@ -29,6 +30,8 @@ export default function StatsPage() {
     const key = dayKey(new Date(Date.now() - offset * 86_400_000))
     days.push({ key, active: state.stats.studyDays.includes(key) })
   }
+
+  const verbs = verbMastery(state)
 
   const ranked = state.sets
     .map((set) => ({ set, mastery: masteryFor(set, getProgress(set.id)), progress: getProgress(set.id) }))
@@ -92,6 +95,49 @@ export default function StatsPage() {
           </div>
         </section>
       )}
+
+      <section className="mt-8 rounded-xl border bg-card p-5">
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <div>
+            <p className="flex items-center gap-2 text-sm font-bold text-muted-foreground">
+              <Languages className="size-4" />
+              Спряжение глаголов
+            </p>
+            <p className="display-type text-3xl font-extrabold">{verbs.percent}%</p>
+          </div>
+          {verbs.total > 0 ? (
+            <div className="flex flex-wrap gap-4 text-sm">
+              {[
+                { label: "Выучено", value: verbs.mastered, color: "bg-chart-2" },
+                { label: "Знакомо", value: verbs.familiar, color: "bg-primary" },
+                { label: "Изучается", value: verbs.learning, color: "bg-accent" },
+              ].map((item) => (
+                <span key={item.label} className="flex items-center gap-2">
+                  <span className={cn("size-2.5 rounded-full", item.color)} />
+                  <span className="text-muted-foreground">{item.label}</span>
+                  <span className="font-bold tabular-nums">{item.value}</span>
+                </span>
+              ))}
+            </div>
+          ) : (
+            <Button asChild size="sm" className="rounded-md font-bold">
+              <Link href="/verbs">Начать тренажёр</Link>
+            </Button>
+          )}
+        </div>
+        {verbs.total > 0 && (
+          <>
+            <div className="mt-4 flex h-2.5 overflow-hidden rounded-full bg-muted">
+              <div className="bg-chart-2" style={{ width: `${(verbs.mastered / verbs.total) * 100}%` }} />
+              <div className="bg-primary" style={{ width: `${(verbs.familiar / verbs.total) * 100}%` }} />
+              <div className="bg-accent" style={{ width: `${(verbs.learning / verbs.total) * 100}%` }} />
+            </div>
+            <p className="mt-2 text-xs text-muted-foreground">
+              Отработано пар «глагол + время»: {verbs.total}
+            </p>
+          </>
+        )}
+      </section>
 
       <section className="mt-8">
         <h2 className="display-type mb-3 text-lg font-extrabold">Все модули</h2>

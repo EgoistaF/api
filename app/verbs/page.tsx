@@ -2,27 +2,17 @@
 
 import * as React from "react"
 import Link from "next/link"
-import { Check, Languages, RotateCcw, Trophy, Volume2, X } from "lucide-react"
+import { Languages, RotateCcw, Trophy } from "lucide-react"
 import { toast } from "sonner"
 import { useStore } from "@/lib/store"
 import { shuffle } from "@/lib/text"
-import { speak } from "@/lib/speech"
 import { VERBS } from "@/lib/verbs/data"
-import { conjugate, conjugateOne, personsFor } from "@/lib/verbs/conjugate"
-import { gradeVerbAnswer, type VerbVerdict } from "@/lib/verbs/grade"
-import {
-  PERSON_LABELS,
-  TENSES,
-  TENSE_HINTS,
-  TENSE_LABELS,
-  type Person,
-  type Tense,
-  type VerbEntry,
-} from "@/lib/verbs/types"
+import { conjugateOne, personsFor } from "@/lib/verbs/conjugate"
+import { PERSON_LABELS, TENSES, TENSE_HINTS, TENSE_LABELS, type Person, type Tense, type VerbEntry } from "@/lib/verbs/types"
 import { LEVEL_INFO, type Level } from "@/lib/catalog/types"
 import { Confetti } from "@/components/confetti"
+import { VerbQuestion } from "@/components/verb-question"
 import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Skeleton } from "@/components/ui/skeleton"
 import { cn } from "@/lib/utils"
@@ -41,12 +31,9 @@ export default function VerbsPage() {
   const [tenses, setTenses] = React.useState<Tense[]>(DEFAULT_TENSES)
   const [queue, setQueue] = React.useState<Question[] | null>(null)
   const [index, setIndex] = React.useState(0)
-  const [input, setInput] = React.useState("")
-  const [verdict, setVerdict] = React.useState<VerbVerdict | "idle">("idle")
   const [stats, setStats] = React.useState({ correct: 0, wrong: 0 })
   const [missed, setMissed] = React.useState<Miss[]>([])
   const [done, setDone] = React.useState(false)
-  const inputRef = React.useRef<HTMLInputElement>(null)
 
   const pool = React.useMemo(() => VERBS.filter((verb) => levels.includes(verb.level)), [levels])
 
@@ -65,10 +52,6 @@ export default function VerbsPage() {
   }, [pool, tenses])
 
   const current = queue?.[index]
-
-  React.useEffect(() => {
-    if (current && verdict === "idle") inputRef.current?.focus()
-  }, [current, verdict])
 
   if (!ready) return <Skeleton className="mx-auto mt-10 h-96 max-w-2xl rounded-xl" />
 
@@ -92,27 +75,12 @@ export default function VerbsPage() {
     }
     setQueue(from ? shuffle(from) : buildRound(source))
     setIndex(0)
-    setInput("")
-    setVerdict("idle")
     setStats({ correct: 0, wrong: 0 })
     setMissed([])
     setDone(false)
   }
 
-  function submit() {
-    if (!current || verdict !== "idle") return
-    const result = gradeVerbAnswer(current.verb, current.tense, current.person, input)
-    setVerdict(result)
-    const correct = result === "correct"
-    recordVerbAnswer(`${current.verb.infinitive}|${current.tense}`, correct)
-    setStats((prev) => ({ correct: prev.correct + (correct ? 1 : 0), wrong: prev.wrong + (correct ? 0 : 1) }))
-    if (!correct) setMissed((prev) => [...prev, { ...current, given: input.trim() }])
-    else window.setTimeout(next, 550)
-  }
-
   function next() {
-    setInput("")
-    setVerdict("idle")
     setIndex((prev) => {
       if (!queue || prev + 1 >= queue.length) {
         setDone(true)
@@ -240,9 +208,6 @@ export default function VerbsPage() {
   /* ---------------- the drill ---------------- */
   if (!current) return <Skeleton className="mx-auto mt-10 h-96 max-w-2xl rounded-xl" />
 
-  const row = conjugate(current.verb, current.tense)
-  const showRow = verdict === "wrong" || verdict === "umlaut"
-
   return (
     <div className="mx-auto max-w-2xl px-4 py-6 sm:px-6">
       <div className="mb-4 flex items-center justify-between text-sm font-bold">
@@ -255,142 +220,18 @@ export default function VerbsPage() {
         <div className="h-full bg-primary transition-all" style={{ width: `${((index + 1) / queue.length) * 100}%` }} />
       </div>
 
-      <div className="rounded-xl border-2 bg-card p-6">
-        <div className="flex items-start justify-between gap-3">
-          <p className="text-xs font-bold uppercase tracking-wide text-muted-foreground">
-            {TENSE_LABELS[current.tense]} · {TENSE_HINTS[current.tense]}
-          </p>
-          <Button
-            variant="ghost"
-            size="icon"
-            className="size-8"
-            aria-label="Озвучить"
-            onClick={() => speak(`${current.verb.infinitive}`, "de-DE")}
-          >
-            <Volume2 className="size-4" />
-          </Button>
-        </div>
-        <p className="mt-4 text-2xl font-bold sm:text-3xl">{current.verb.infinitive}</p>
-        <p className="mt-1 text-sm text-muted-foreground">{current.verb.translation}</p>
-
-        <p className="mt-5 flex items-baseline gap-3 text-xl font-bold">
-          <span className="text-primary">{PERSON_LABELS[current.person]}</span>
-          <span className="min-w-[8rem] border-b-2 border-dashed border-input pb-1 text-muted-foreground">
-            {verdict === "idle" ? "…" : current.answer}
-          </span>
-        </p>
-      </div>
-
-      <form
-        className="mt-5"
-        onSubmit={(event) => {
-          event.preventDefault()
-          if (verdict === "idle") submit()
-          else next()
+      <VerbQuestion
+        verb={current.verb}
+        tense={current.tense}
+        person={current.person}
+        onAnswered={(result, given) => {
+          const correct = result === "correct"
+          recordVerbAnswer(`${current.verb.infinitive}|${current.tense}`, correct)
+          setStats((prev) => ({ correct: prev.correct + (correct ? 1 : 0), wrong: prev.wrong + (correct ? 0 : 1) }))
+          if (!correct) setMissed((prev) => [...prev, { ...current, given }])
         }}
-      >
-        <Input
-          ref={inputRef}
-          value={input}
-          onChange={(event) => setInput(event.target.value)}
-          disabled={verdict !== "idle"}
-          placeholder="Напишите форму"
-          autoComplete="off"
-          autoCapitalize="off"
-          spellCheck={false}
-          className={cn(
-            "h-14 rounded-md border-2 text-base font-semibold",
-            verdict === "correct" && "border-chart-2 bg-chart-2/10",
-            verdict === "umlaut" && "border-accent bg-accent/10",
-            verdict === "wrong" && "animate-shake border-destructive bg-destructive/10",
-          )}
-        />
-        {verdict === "idle" && (
-          <div className="mt-3 flex gap-2">
-            <Button type="submit" className="h-11 flex-1 rounded-md font-bold">
-              Проверить
-            </Button>
-            <Button
-              type="button"
-              variant="outline"
-              className="h-11 rounded-md font-bold"
-              onClick={() => {
-                setVerdict("wrong")
-                recordVerbAnswer(`${current.verb.infinitive}|${current.tense}`, false)
-                setStats((prev) => ({ ...prev, wrong: prev.wrong + 1 }))
-                setMissed((prev) => [...prev, { ...current, given: "" }])
-              }}
-            >
-              Не знаю
-            </Button>
-          </div>
-        )}
-      </form>
-
-      {verdict !== "idle" && (
-        <div className="animate-pop-in mt-4">
-          <div
-            className={cn(
-              "flex flex-wrap items-center justify-between gap-3 rounded-md border-2 p-4",
-              verdict === "correct" && "border-chart-2 bg-chart-2/10",
-              verdict === "umlaut" && "border-accent bg-accent/10",
-              verdict === "wrong" && "border-destructive bg-destructive/10",
-            )}
-          >
-            <div className="flex min-w-0 items-start gap-2">
-              {verdict === "correct" ? (
-                <Check className="mt-0.5 size-5 shrink-0 text-chart-2" />
-              ) : (
-                <X className="mt-0.5 size-5 shrink-0 text-destructive" />
-              )}
-              <div className="min-w-0">
-                <p className="font-extrabold">
-                  {verdict === "correct"
-                    ? "Верно!"
-                    : verdict === "umlaut"
-                      ? "Не хватает умляута — в спряжении это ошибка"
-                      : "Правильная форма:"}
-                </p>
-                {verdict !== "correct" && <p className="mt-0.5 break-words font-bold">{current.answer}</p>}
-              </div>
-            </div>
-            <Button onClick={next} className="rounded-md font-bold">
-              Дальше
-            </Button>
-          </div>
-
-          {showRow && (
-            <div className="mt-3 rounded-md border bg-card p-4">
-              <p className="mb-2 text-xs font-bold uppercase tracking-wide text-muted-foreground">
-                {current.verb.infinitive} · {TENSE_LABELS[current.tense]}
-              </p>
-              <div className="grid gap-1 sm:grid-cols-2">
-                {personsFor(current.tense).map((person) => (
-                  <div
-                    key={person}
-                    className={cn(
-                      "flex items-baseline gap-2 rounded px-2 py-1 text-sm",
-                      person === current.person && "bg-accent/25 font-bold",
-                    )}
-                  >
-                    <span className="w-20 shrink-0 text-muted-foreground">{PERSON_LABELS[person]}</span>
-                    <span>{row[person]}</span>
-                  </div>
-                ))}
-              </div>
-              <Button
-                variant="ghost"
-                size="sm"
-                className="mt-2 font-bold"
-                onClick={() => speak(`${PERSON_LABELS[current.person].split("/")[0]} ${current.answer}`, "de-DE")}
-              >
-                <Volume2 className="size-4" />
-                Послушать
-              </Button>
-            </div>
-          )}
-        </div>
-      )}
+        onNext={next}
+      />
 
       <div className="mt-6 flex justify-center gap-6 text-sm font-bold text-muted-foreground">
         <span className="text-chart-2">Верно: {stats.correct}</span>
