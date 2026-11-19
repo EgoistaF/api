@@ -3,6 +3,7 @@
 import * as React from "react"
 import Link from "next/link"
 import { ArrowRight, BookOpen, CalendarCheck, Dumbbell, Gamepad2, GraduationCap, Keyboard, Languages, Layers, Volume2, Zap } from "lucide-react"
+import { VERBS } from "@/lib/verbs/data"
 import { useStore } from "@/lib/store"
 import { collectArticleCards, collectDue, formatDueIn, nextDueAt } from "@/lib/review"
 import { plural } from "@/lib/text"
@@ -82,6 +83,23 @@ export default function DrillsPage() {
               {nouns.length
                 ? `der / die / das по ${nouns.length} ${plural(nouns.length, "существительному", "существительным", "существительным")}`
                 : "Добавьте немецкие модули — слова возьмутся оттуда"}
+            </p>
+          </div>
+          <span className="mt-4 flex items-center gap-1.5 text-sm font-bold text-primary">
+            Начать
+            <ArrowRight className="size-4" />
+          </span>
+        </Link>
+
+        <Link
+          href="/verbs"
+          className="flex flex-col justify-between rounded-xl border bg-card p-5 transition-colors hover:border-primary"
+        >
+          <div>
+            <Languages className="size-6 text-primary" />
+            <p className="display-type mt-3 font-extrabold">Спряжение глаголов</p>
+            <p className="mt-1 text-sm text-muted-foreground">
+              {VERBS.length} глаголов A1–B1, шесть времён. Форму нужно написать, а не выбрать
             </p>
           </div>
           <span className="mt-4 flex items-center gap-1.5 text-sm font-bold text-primary">

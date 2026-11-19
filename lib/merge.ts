@@ -85,9 +85,15 @@ export function mergeStates(local: AppState, remote: AppState): AppState {
     .filter((id, index, all) => sets.has(id) && all.indexOf(id) === index)
     .slice(0, 12)
 
+  const verbProgress: Record<string, CardProgress> = { ...(local.verbProgress ?? {}) }
+  for (const [key, card] of Object.entries(remote.verbProgress ?? {})) {
+    verbProgress[key] = verbProgress[key] ? newerCard(verbProgress[key], card) : card
+  }
+
   return {
     version: 1,
     deleted,
+    verbProgress,
     sets: Array.from(sets.values()).sort((a, b) => b.updatedAt - a.updatedAt),
     folders: Array.from(folders.values()),
     progress,

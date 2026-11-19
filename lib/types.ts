@@ -81,6 +81,8 @@ export type AppState = {
   sets: StudySet[]
   folders: Folder[]
   progress: Record<string, SetProgress>
+  /** Conjugation practice, keyed by "infinitive|tense". */
+  verbProgress: Record<string, CardProgress>
   recent: string[]
   settings: Settings
   stats: Stats

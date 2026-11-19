@@ -6,6 +6,7 @@
  * doubt. The invariants catch data-entry slips; the tables catch wrong rules.
  */
 import { conjugate, conjugateOne, acceptableForms, personsFor } from "../lib/verbs/conjugate.ts"
+import { gradeVerbAnswer } from "../lib/verbs/grade.ts"
 import { VERBS } from "../lib/verbs/data.ts"
 import { PERSONS, TENSES } from "../lib/verbs/types.ts"
 
@@ -201,6 +202,31 @@ checks++
 if (!acceptableForms(verb("lernen"), "imperativ", "du").includes("lerne")) fail("lernen: 'lerne' not accepted as an imperative")
 checks++
 if (!acceptableForms(verb("lernen"), "imperativ", "du").includes("lern")) fail("lernen: 'lern' not accepted as an imperative")
+
+/* ---------------- grading ---------------- */
+
+const grade = (infinitive, tense, person, input, want) => {
+  checks++
+  const got = gradeVerbAnswer(verb(infinitive), tense, person, input)
+  if (got !== want) fail(`grade ${infinitive} ${tense} ${person} "${input}": got ${got}, expected ${want}`)
+}
+
+grade("fahren", "praesens", "du", "fährst", "correct")
+grade("fahren", "praesens", "du", "  Fährst ", "correct")   // case and spacing are forgiven
+grade("fahren", "praesens", "du", "fahrst", "umlaut")        // the very mistake being trained
+grade("fahren", "praesens", "du", "fahre", "wrong")
+grade("fahren", "praesens", "du", "", "wrong")
+grade("heißen", "praesens", "du", "heisst", "umlaut")        // ß written as ss
+grade("heißen", "praesens", "du", "heißt", "correct")
+grade("können", "konjunktiv2", "ich", "konnte", "umlaut")
+grade("können", "konjunktiv2", "ich", "könnte", "correct")
+grade("lernen", "imperativ", "du", "lern", "correct")
+grade("lernen", "imperativ", "du", "lerne", "correct")
+grade("aufstehen", "praesens", "ich", "stehe auf", "correct")
+grade("aufstehen", "praesens", "ich", "stehe   auf", "correct")
+grade("aufstehen", "praesens", "ich", "aufstehe", "wrong")
+grade("machen", "perfekt", "ich", "habe gemacht", "correct")
+grade("machen", "perfekt", "ich", "bin gemacht", "wrong")
 
 /* ---------------- report ---------------- */
 

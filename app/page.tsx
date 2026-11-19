@@ -3,6 +3,7 @@
 import Link from "next/link"
 import * as React from "react"
 import { ArrowRight, BookOpen, CalendarCheck, Flame, Folder, Gamepad2, GraduationCap, Keyboard, Languages, Layers, Plus, Sparkles, Timer, Zap } from "lucide-react"
+import { VERBS } from "@/lib/verbs/data"
 import { useStore } from "@/lib/store"
 import { masteryFor, streakFromDays } from "@/lib/srs"
 import { collectDue, formatDueIn, nextDueAt } from "@/lib/review"
@@ -109,7 +110,7 @@ export default function HomePage() {
       </section>
 
       {/* Daily review */}
-      <section className="mt-6 grid gap-4 sm:grid-cols-2">
+      <section className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         <Link
           href="/review"
           className="flex items-center gap-4 rounded-xl border bg-card p-5 transition-all hover:-translate-y-0.5 hover:border-primary/60 hover:shadow-md"
@@ -146,6 +147,21 @@ export default function HomePage() {
           <span className="min-w-0 flex-1">
             <span className="block font-extrabold">Тренажёр артиклей</span>
             <span className="mt-0.5 block text-sm text-muted-foreground">der / die / das на скорость, с правилами рода</span>
+          </span>
+        </Link>
+
+        <Link
+          href="/verbs"
+          className="flex items-center gap-4 rounded-xl border bg-card p-5 transition-all hover:-translate-y-0.5 hover:border-primary/60 hover:shadow-md"
+        >
+          <span className="grid size-11 shrink-0 place-items-center rounded-xl bg-primary/10 text-primary">
+            <Languages className="size-6" />
+          </span>
+          <span className="min-w-0 flex-1">
+            <span className="block font-extrabold">Спряжение глаголов</span>
+            <span className="mt-0.5 block text-sm text-muted-foreground">
+              {VERBS.length} глаголов, шесть времён, ввод формы
+            </span>
           </span>
         </Link>
       </section>

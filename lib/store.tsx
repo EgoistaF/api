@@ -5,7 +5,7 @@ import type { AppState, Folder, Settings, SetProgress, StudySet, TestResult, Ter
 import { DEFAULT_SETTINGS } from "./types"
 import { createSeedState, emptyState, makeId } from "./seed"
 import { mergeStates } from "./merge"
-import { applyAnswer, cardOf, dayKey, emptyProgress } from "./srs"
+import { applyAnswer, cardOf, dayKey, emptyCard, emptyProgress } from "./srs"
 
 const STORAGE_KEY = "quizmaster.state.v1"
 
@@ -49,6 +49,8 @@ type Ctx = {
   getProgress: (setId: string) => SetProgress
   recordAnswer: (setId: string, termId: string, correct: boolean) => void
   resetProgress: (setId: string) => void
+  /** Conjugation practice, keyed by "infinitive|tense". */
+  recordVerbAnswer: (key: string, correct: boolean) => void
   completeRound: (setId: string) => void
   recordTest: (setId: string, result: TestResult) => void
   recordMatch: (setId: string, ms: number) => boolean
@@ -83,6 +85,7 @@ function migrate(parsed: unknown): AppState | null {
     })),
     folders: candidate.folders ?? [],
     progress: candidate.progress ?? {},
+    verbProgress: candidate.verbProgress ?? {},
     recent: candidate.recent ?? [],
     settings: { ...DEFAULT_SETTINGS, ...(candidate.settings ?? {}) },
     stats: candidate.stats ?? { studyDays: [], cardsStudied: 0, sessions: 0 },
@@ -453,6 +456,19 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
           if (!draft.stats.studyDays.includes(today)) draft.stats.studyDays = [...draft.stats.studyDays, today]
           draft.recent = [setId, ...prev.recent.filter((id) => id !== setId)].slice(0, 12)
           return draft
+        })
+      },
+      recordVerbAnswer: (key, correct) => {
+        setState((prev) => {
+          const cards = { ...prev.verbProgress }
+          cards[key] = applyAnswer(cards[key] ?? emptyCard(), correct)
+          const today = dayKey()
+          const studyDays = prev.stats.studyDays.includes(today) ? prev.stats.studyDays : [...prev.stats.studyDays, today]
+          return {
+            ...prev,
+            verbProgress: cards,
+            stats: { ...prev.stats, cardsStudied: prev.stats.cardsStudied + 1, studyDays },
+          }
         })
       },
       resetProgress: (setId) => {
