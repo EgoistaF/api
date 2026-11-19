@@ -56,8 +56,11 @@ export default function TestPage() {
     return starredOnly ? set.terms.filter((term) => term.starred) : set.terms
   }, [set, starredOnly])
 
+  // Clamp to the pool only once there is a pool: on the first render it is
+  // still empty, and clamping then would collapse the default to one question.
   React.useEffect(() => {
-    setCount((value) => Math.min(Math.max(1, value), Math.max(1, pool.length)))
+    if (!pool.length) return
+    setCount((value) => Math.min(Math.max(1, value), pool.length))
   }, [pool.length])
 
   if (!ready) return <Skeleton className="mx-auto mt-16 h-80 max-w-3xl rounded-2xl" />

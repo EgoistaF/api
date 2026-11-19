@@ -250,7 +250,7 @@ export default function ImportPage() {
             <div className="space-y-2">
               <Label>Папка</Label>
               <Select value={folderId} onValueChange={setFolderId}>
-                <SelectTrigger>
+                <SelectTrigger className="w-full">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>

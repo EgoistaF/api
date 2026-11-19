@@ -10,6 +10,7 @@ import { Label } from "@/components/ui/label"
 import { Switch } from "@/components/ui/switch"
 import { Textarea } from "@/components/ui/textarea"
 import { Skeleton } from "@/components/ui/skeleton"
+import { cn } from "@/lib/utils"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import {
   AlertDialog,
@@ -74,9 +75,9 @@ export default function SettingsPage() {
             onCheckedChange={(checked) => updateSettings({ accentInsensitive: checked })}
           />
         </Row>
-        <Row label="Тип вопросов в «Заучивании»" hint="Смешанный режим подбирает тип под ваш уровень">
+        <Row label="Тип вопросов в «Заучивании»" hint="Смешанный режим подбирает тип под ваш уровень" wide>
           <Select value={state.settings.learnMode} onValueChange={(value) => updateSettings({ learnMode: value as "mixed" | "choice" | "written" })}>
-            <SelectTrigger className="w-[13rem]">
+            <SelectTrigger className="w-full sm:w-[13rem]">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
@@ -86,14 +87,14 @@ export default function SettingsPage() {
             </SelectContent>
           </Select>
         </Row>
-        <Row label={`Пауза автопрокрутки: ${state.settings.autoplayDelay} с`} hint="Для режима «Карточки»">
+        <Row label={`Пауза автопрокрутки: ${state.settings.autoplayDelay} с`} hint="Для режима «Карточки»" wide>
           <input
             type="range"
             min={2}
             max={12}
             value={state.settings.autoplayDelay}
             onChange={(event) => updateSettings({ autoplayDelay: Number(event.target.value) })}
-            className="w-40 accent-primary"
+            className="w-full accent-primary sm:w-40"
           />
         </Row>
       </section>
@@ -231,14 +232,35 @@ export default function SettingsPage() {
   )
 }
 
-function Row({ label, hint, children }: { label: string; hint?: string; children: React.ReactNode }) {
+/**
+ * A setting and its control. A switch is narrow enough to sit beside the
+ * label at any width; a dropdown or a slider is not, and on a phone it would
+ * squeeze the label into a column one word across — those rows pass `wide`
+ * and stack instead.
+ */
+function Row({
+  label,
+  hint,
+  wide = false,
+  children,
+}: {
+  label: string
+  hint?: string
+  wide?: boolean
+  children: React.ReactNode
+}) {
   return (
-    <div className="flex items-center justify-between gap-4">
+    <div
+      className={cn(
+        "flex gap-4",
+        wide ? "flex-col gap-2 sm:flex-row sm:items-center sm:justify-between sm:gap-4" : "items-center justify-between",
+      )}
+    >
       <div className="min-w-0">
         <Label className="text-sm font-bold">{label}</Label>
         {hint && <p className="mt-0.5 text-xs text-muted-foreground">{hint}</p>}
       </div>
-      <div className="shrink-0">{children}</div>
+      <div className={cn(wide ? "w-full sm:w-auto sm:shrink-0" : "shrink-0")}>{children}</div>
     </div>
   )
 }

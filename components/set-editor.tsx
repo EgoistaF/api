@@ -164,7 +164,7 @@ export function SetEditor({ existing }: { existing?: StudySet }) {
           <div className="space-y-2">
             <Label>Язык термина</Label>
             <Select value={termLang} onValueChange={setTermLang}>
-              <SelectTrigger>
+              <SelectTrigger className="w-full">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -179,7 +179,7 @@ export function SetEditor({ existing }: { existing?: StudySet }) {
           <div className="space-y-2">
             <Label>Язык определения</Label>
             <Select value={defLang} onValueChange={setDefLang}>
-              <SelectTrigger>
+              <SelectTrigger className="w-full">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -204,7 +204,7 @@ export function SetEditor({ existing }: { existing?: StudySet }) {
                 setFolderId(value)
               }}
             >
-              <SelectTrigger>
+              <SelectTrigger className="w-full">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
