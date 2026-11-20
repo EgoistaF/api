@@ -1,0 +1,17 @@
+services:
+  quizmaster:
+    build: .
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:3000:3000"
+    environment:
+      # Signs session cookies and derives storage paths. Generate once:
+      #   openssl rand -hex 32
+      # Changing it signs everyone out and makes existing profiles unreachable.
+      AUTH_SECRET: ${AUTH_SECRET:?set AUTH_SECRET in .env}
+      DATA_DIR: /data
+    volumes:
+      - quizmaster-data:/data
+
+volumes:
+  quizmaster-data:

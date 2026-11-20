@@ -1,17 +1,6 @@
 import { gunzipSync, gzipSync } from "node:zlib"
 import { list, put } from "@vercel/blob"
-
-/** Thrown when blob storage itself is unavailable, so routes can say so plainly. */
-export class StorageError extends Error {
-  constructor(
-    readonly operation: "read" | "write",
-    cause: unknown,
-  ) {
-    super(`blob ${operation} failed: ${cause instanceof Error ? cause.message : String(cause)}`)
-    this.name = "StorageError"
-    this.cause = cause
-  }
-}
+import { assertSafePath, isGzip, StorageError, type StorageDriver } from "./types.ts"
 
 /** Vercel Blob rejects a cache age below its minimum. */
 const MIN_CACHE_SECONDS = 60
@@ -47,9 +36,10 @@ async function baseUrl(): Promise<string | null> {
 
 /** Last write failure, so the health endpoint can report it without writing. */
 let lastWriteError: { at: number; message: string } | null = null
-export const lastWriteFailure = () => lastWriteError
+export const blobWriteFailure = () => lastWriteError
 
-export async function writeJson(pathname: string, data: unknown) {
+async function writeJson(pathname: string, data: unknown) {
+  assertSafePath(pathname)
   try {
     // Stored gzipped: a full library is ~500 KB of JSON but under 60 KB
     // compressed, which keeps data transfer small as well.
@@ -70,8 +60,6 @@ export async function writeJson(pathname: string, data: unknown) {
   }
 }
 
-const GZIP_MAGIC = [0x1f, 0x8b]
-
 async function download<T>(url: string): Promise<T | null> {
   try {
     const response = await fetch(`${url}?t=${Date.now()}`, { cache: "no-store" })
@@ -79,22 +67,20 @@ async function download<T>(url: string): Promise<T | null> {
     const bytes = Buffer.from(await response.arrayBuffer())
     if (!bytes.length) return null
     // Files written before compression was added are plain JSON.
-    const text = bytes[0] === GZIP_MAGIC[0] && bytes[1] === GZIP_MAGIC[1] ? gunzipSync(bytes).toString() : bytes.toString()
-    return JSON.parse(text) as T
+    return JSON.parse(isGzip(bytes) ? gunzipSync(bytes).toString() : bytes.toString()) as T
   } catch {
     return null
   }
 }
 
 /** Reads one stored file. Costs no advanced operation once the host is known. */
-export async function readJson<T>(pathname: string): Promise<T | null> {
+async function readJson<T>(pathname: string): Promise<T | null> {
   const base = await baseUrl()
   if (!base) return null
   return download<T>(`${base}/${pathname}`)
 }
 
-/** Whether the store can be reached at all, without touching user data. */
-export async function storageReadable() {
+async function readable() {
   try {
     return Boolean(await baseUrl())
   } catch {
@@ -102,11 +88,10 @@ export async function storageReadable() {
   }
 }
 
-export type UserRecord = {
-  id: string
-  username: string
-  displayName: string
-  salt: string
-  hash: string
-  createdAt: number
+export const blobDriver: StorageDriver = {
+  name: "blob",
+  location: "Vercel Blob",
+  readJson,
+  writeJson,
+  readable,
 }

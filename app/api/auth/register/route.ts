@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server"
 import { randomUUID } from "node:crypto"
 import { blobPath, createSessionToken, hashPassword, normalizeUsername, sessionCookie, validateCredentials } from "@/lib/server/auth"
-import { StorageError, readJson, writeJson, type UserRecord } from "@/lib/server/blob-store"
+import { StorageError, readJson, writeJson, type UserRecord } from "@/lib/server/storage"
 
 export const runtime = "nodejs"
 export const dynamic = "force-dynamic"

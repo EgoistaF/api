@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server"
 import { cookies } from "next/headers"
 import { SESSION_COOKIE, blobPath, readSessionToken } from "@/lib/server/auth"
-import { StorageError, readJson, writeJson } from "@/lib/server/blob-store"
+import { StorageError, readJson, writeJson } from "@/lib/server/storage"
 import { mergeStates } from "@/lib/merge"
 import type { AppState } from "@/lib/types"
 

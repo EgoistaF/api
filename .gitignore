@@ -31,3 +31,6 @@ next-env.d.ts
 
 # browser-test screenshots
 /tests/.artifacts
+
+# local profile store when self-hosting
+/.data

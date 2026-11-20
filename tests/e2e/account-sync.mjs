@@ -1,4 +1,4 @@
-import { ARTIFACTS, BASE, chromium, devices, finish, note, seedCourse, step } from "../helpers.mjs"
+import { ARTIFACTS, BASE, chromium, devices, finish, flushSync, note, seedCourse, step } from "../helpers.mjs"
 const USER = 'qa' + Date.now().toString(36)
 const PASS = 'test-pass-123'
 
@@ -58,7 +58,7 @@ const readState = (page) => page.evaluate(() => JSON.parse(localStorage.getItem(
     await A.page.getByRole('button', { name: /Начать/ }).click()
     await A.page.waitForSelector('text=Клавиши 1, 2, 3')
     for (let i = 0; i < 3; i++) { await A.page.keyboard.press('1'); await A.page.waitForTimeout(1700) }
-    await A.page.waitForTimeout(4000) // let the debounced push run
+    await flushSync(A.page)
   })
 
   let aSets = 0, aAnswers = 0
@@ -104,7 +104,7 @@ const readState = (page) => page.evaluate(() => JSON.parse(localStorage.getItem(
     await B.page.locator('input[placeholder="Определение"]').first().fill('собака')
     await B.page.getByRole('button', { name: 'Создать модуль' }).click()
     await B.page.waitForURL(/\/set\//, { timeout: 20000 })
-    await B.page.waitForTimeout(4000)
+    await flushSync(B.page)
 
     await A.page.goto(BASE + '/library', { waitUntil: 'networkidle' })
     await A.page.waitForTimeout(1000)

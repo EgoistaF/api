@@ -59,6 +59,22 @@ export function finish(pageErrors = []) {
   if (failures || real.length) process.exitCode = 1
 }
 
+/**
+ * Makes the app save to the account now instead of waiting out its debounce.
+ * Hiding the tab is what a real device does when it is put away, and the app
+ * flushes on exactly that signal.
+ */
+export async function flushSync(page, settleMs = 2500) {
+  await page.evaluate(() => {
+    Object.defineProperty(document, "visibilityState", { value: "hidden", configurable: true })
+    document.dispatchEvent(new Event("visibilitychange"))
+  })
+  await page.waitForTimeout(settleMs)
+  await page.evaluate(() => {
+    Object.defineProperty(document, "visibilityState", { value: "visible", configurable: true })
+  })
+}
+
 /** A library to study: the app starts empty on purpose. */
 export async function seedCourse(page) {
   await page.goto(BASE + "/catalog", { waitUntil: "networkidle" })

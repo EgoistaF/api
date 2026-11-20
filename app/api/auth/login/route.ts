@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server"
 import { blobPath, createSessionToken, normalizeUsername, sessionCookie, verifyPassword } from "@/lib/server/auth"
-import { StorageError, readJson, type UserRecord } from "@/lib/server/blob-store"
+import { StorageError, readJson, type UserRecord } from "@/lib/server/storage"
 
 export const runtime = "nodejs"
 export const dynamic = "force-dynamic"

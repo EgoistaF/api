@@ -6,38 +6,41 @@ import { ARTIFACTS, BASE, chromium, devices, finish, note, seedCourse, step } fr
   const errs = []
   page.on('pageerror', (e) => errs.push(e.message.slice(0, 160)))
   
-  await step('the outage is surfaced, on opening or at the latest on trying', async () => {
+  await step('registering either works, or explains that the service is down', async () => {
     await page.goto(BASE + '/account', { waitUntil: 'networkidle' })
-    const health = await page.evaluate(() => fetch('/api/health').then((r) => r.json()).catch(() => null))
-    if (health?.ok) {
-      // A cold server has no failed write to report yet; the banner is then
-      // expected only after an attempt, which the next scenario checks.
-      note('health still reports ok; banner is checked after the attempt')
-      return
-    }
-    await page.waitForSelector('text=Сервис профилей сейчас недоступен', { timeout: 15000 })
-  })
-  await page.screenshot({ path: ARTIFACTS + '/acct-down.png' })
-
-  await step('a broken service is never reported as a wrong password', async () => {
-    await page.locator('#register-username').fill('egoista')
+    const name = 'probe' + Date.now().toString(36)
+    await page.locator('#register-username').fill(name)
     await page.locator('#register-password').fill('test-pass-123')
     await page.locator('#repeat').fill('test-pass-123')
     await page.locator('form').getByRole('button', { name: 'Создать профиль' }).click()
-    // The exact wording depends on which keys the deployment has; what must
-    // hold everywhere is that the user is not blamed for the outage.
-    const error = page.locator('form p.text-destructive')
-    await error.waitFor({ timeout: 25000 })
-    const text = (await error.innerText()).trim()
-    note('error shown: ' + text)
+
+    // Success sends you to the home page; failure keeps you on the form.
+    const failed = page.locator('form p.text-destructive')
+    await Promise.race([
+      page.waitForURL(BASE + '/', { timeout: 25000 }).catch(() => null),
+      failed.waitFor({ timeout: 25000 }).catch(() => null),
+    ])
+
+    if (!(await failed.count())) {
+      const me = await page.evaluate(() => fetch('/api/auth/me').then((r) => r.json()).catch(() => null))
+      if (me?.user?.username !== name) throw new Error('no error shown but not signed in either')
+      note('profile service is up: registered and signed in as ' + me.user.username)
+      await page.goto(BASE + '/account', { waitUntil: 'networkidle' })
+      if (!(await page.getByRole('button', { name: /Синхронизировать сейчас/ }).count())) {
+        throw new Error('signed in but the profile screen offers no sync controls')
+      }
+      return
+    }
+
+    const text = (await failed.innerText()).trim()
+    note('profile service is down: ' + text)
+    if (!text) throw new Error('neither signed in nor told why')
+    // Whatever the wording, the user must not be blamed for an outage.
     if (/неверн/i.test(text)) throw new Error('outage reported as bad credentials: ' + text)
-    if (!text) throw new Error('no error shown at all')
-    // Once an attempt has failed for storage, the page must say so plainly.
     if (/недоступ/i.test(text) && !(await page.locator('text=Сервис профилей сейчас недоступен').count())) {
       throw new Error('outage message shown but the banner never appeared')
     }
   })
-  await page.screenshot({ path: ARTIFACTS + '/acct-register-error.png' })
 
   await step('the app itself still works offline-first', async () => {
     await page.goto(BASE + '/catalog', { waitUntil: 'networkidle' })
