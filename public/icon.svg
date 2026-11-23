@@ -1,6 +1,8 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64">
-  <rect width="64" height="64" rx="4" fill="#18181b"/>
-  <rect x="12" y="14" width="34" height="24" rx="2" fill="#ffd400"/>
-  <rect x="18" y="22" width="34" height="24" rx="2" fill="#fafaf9"/>
-  <path d="M26 34h18M26 40h12" stroke="#18181b" stroke-width="3" stroke-linecap="round"/>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512" role="img" aria-label="QuizMaster">
+  <rect width="512" height="512" fill="#18181b"/>
+  <!-- Берлин: чёрное поле, белое кольцо, жёлтый хвост. Кольцо смещено влево-вверх,
+       чтобы хвост уравновесил композицию. Вся графика лежит внутри безопасной зоны
+       (радиус ~195 от центра), которую обрезает maskable-иконка Android. -->
+  <circle cx="244" cy="244" r="92" fill="none" stroke="#fafaf9" stroke-width="46"/>
+  <path d="M305 305 L374 374" stroke="#ffd400" stroke-width="46" stroke-linecap="butt"/>
 </svg>

@@ -20,7 +20,15 @@ export const metadata: Metadata = {
     "Бесплатные флеш-карточки без лимитов: режимы «Карточки», «Заучивание», «Письмо», «Диктант», «Тест» и игра «Подбор». Всё работает прямо в браузере.",
   applicationName: "QuizMaster",
   keywords: ["флеш-карточки", "quizlet", "учить слова", "тесты", "подготовка к экзамену"],
-  icons: { icon: "/icon.svg" },
+  icons: {
+    // Launchers and iOS take the PNGs; the SVG is for the browser tab.
+    icon: [
+      { url: "/icon.svg", type: "image/svg+xml" },
+      { url: "/icon-192.png", sizes: "192x192", type: "image/png" },
+      { url: "/icon-512.png", sizes: "512x512", type: "image/png" },
+    ],
+    apple: { url: "/apple-touch-icon.png", sizes: "180x180" },
+  },
   manifest: "/manifest.webmanifest",
 }
 
