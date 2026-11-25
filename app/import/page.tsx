@@ -145,6 +145,7 @@ export default function ImportPage() {
           <ImagePlus className="size-7" />
           Выбрать скриншоты
           <span className="text-xs font-semibold">или перетащите сюда, или вставьте из буфера (Ctrl+V)</span>
+          <span className="text-xs font-normal">Скриншот читается точнее фото, но и снимок с экрана подойдёт</span>
         </button>
 
         {shots.length > 0 && (
@@ -197,7 +198,8 @@ export default function ImportPage() {
             </p>
           </div>
           <p className="mb-3 text-sm text-muted-foreground">
-            Распознавание ошибается на мелком шрифте — поправьте, что нужно. Пустые строки не попадут в модуль.
+            У таблицы в несколько колонок все формы слова собираются в «Термин», а перевод — в «Перевод». Распознавание
+            ошибается на мелком шрифте — поправьте, что нужно. Пустые строки не попадут в модуль.
           </p>
 
           <div className="space-y-2">

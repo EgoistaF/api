@@ -1,5 +1,5 @@
 import { ARTIFACTS, BASE, chromium, devices, finish, note, seedCourse, step } from "../helpers.mjs"
-import { makeWordListImage, WORD_LIST } from "../fixtures.mjs"
+import { makeVerbTablePhoto, makeWordListImage, VERB_TABLE, WORD_LIST } from "../fixtures.mjs"
 const EXPECTED = [
   ['die Wohnung', 'квартира'], ['der Schlüssel', 'ключ'], ['das Fenster', 'окно'],
   ['die Treppe', 'лестница'], ['der Kühlschrank', 'холодильник'], ['die Waschmaschine', 'стиральная машина'],
@@ -68,6 +68,45 @@ const EXPECTED = [
     })
     console.log('     stored cards:', count)
     if (count < 7) throw new Error('too few cards stored: ' + count)
+  })
+
+  // A four-column table shot off a screen: the case the single-gap split used
+  // to turn into 26 rows of untranslated German.
+  const tablePhoto = await makeVerbTablePhoto()
+  await step('read a photographed four-column table', async () => {
+    await page.goto(BASE + '/import', { waitUntil: 'networkidle' })
+    await page.setInputFiles('input[type=file]', tablePhoto)
+    await page.waitForSelector('img[alt=""]', { timeout: 10000 })
+    await page.getByRole('button', { name: /Распознать текст/ }).click()
+    await page.waitForSelector('text=Проверьте строки', { timeout: 240000 })
+  })
+  await page.screenshot({ path: ARTIFACTS + '/import-table.png', fullPage: true })
+
+  await step('every row is three German forms against their translation', async () => {
+    const rows = await page.evaluate(() => {
+      const out = []
+      for (const row of document.querySelectorAll('section:nth-of-type(2) .space-y-2 > div')) {
+        const inputs = row.querySelectorAll('input')
+        if (inputs.length === 2) out.push([inputs[0].value, inputs[1].value])
+      }
+      return out
+    })
+    rows.forEach(([t, d]) => console.log(`       "${t}"  |  "${d}"`))
+    const norm = (s) => s.toLowerCase().replace(/[^a-zа-яёäöüß ]/gi, ' ').replace(/\s+/g, ' ').trim()
+
+    const heading = rows.filter(([t, d]) => /starke verben|partizip/i.test(t + ' ' + d))
+    if (heading.length) throw new Error('the title and column headings became cards: ' + JSON.stringify(heading))
+
+    const translated = rows.filter(([, d]) => /[а-яё]/i.test(d)).length
+    if (translated < rows.length * 0.9) throw new Error(`only ${translated} of ${rows.length} rows have a translation`)
+
+    let whole = 0
+    for (const [infinitive, past, participle, russian] of VERB_TABLE) {
+      const want = norm(`${infinitive} ${past} ${participle}`)
+      if (rows.some(([t, d]) => norm(t) === want && norm(d) === norm(russian))) whole++
+    }
+    console.log(`     complete rows: ${whole}/${VERB_TABLE.length} (of ${rows.length} read)`)
+    if (whole < VERB_TABLE.length * 0.7) throw new Error(`only ${whole}/${VERB_TABLE.length} rows came out whole`)
   })
 
   console.log('\nerrors: ' + errs.length)
