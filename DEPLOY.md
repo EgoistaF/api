@@ -113,8 +113,23 @@ does not work over plain HTTP from anywhere but localhost.
 | `DATA_DIR` | `./.data` | Where profiles are kept |
 | `STORAGE_DRIVER` | auto | `filesystem` or `blob`; auto picks blob when `BLOB_READ_WRITE_TOKEN` is set |
 | `PORT` | `3000` | Port to listen on |
+| `ANTHROPIC_API_KEY` | — | Optional. Lets everyone on this server read word lists with Claude |
 
 `/api/health` reports which driver is active and whether it is writable.
+
+### Reading word lists with a model
+
+Recognition runs in the browser and costs nothing. Importing a photo can also
+go through Claude, which reads handwriting and wide tables the local engine
+cannot — the picture is then sent to Anthropic and billed to whoever's key is
+used.
+
+Set `ANTHROPIC_API_KEY` here and the button works for everyone on the server,
+at your expense — for signed-in visitors only, so a key on a public server
+cannot be spent by passers-by (without `AUTH_SECRET` nobody can sign in, and
+the key is open to anyone who can reach the server). Leave it unset and each person can paste their own key under
+**Settings → Распознавание с ИИ**; it stays in their browser, travels with the
+one request it is used for, and is never stored on the server.
 
 ## Moving your data across
 

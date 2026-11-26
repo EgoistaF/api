@@ -3,13 +3,14 @@
 import * as React from "react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
-import { ArrowRight, ImagePlus, Loader2, ScanText, Trash2, X } from "lucide-react"
+import { ArrowRight, ImagePlus, Loader2, ScanText, Sparkles, Trash2, Wand2, X } from "lucide-react"
 import { toast } from "sonner"
 import { useStore } from "@/lib/store"
 import { makeId } from "@/lib/seed"
 import { plural } from "@/lib/text"
 import type { ParsedPair } from "@/lib/text"
 import { recognizePairs, type OcrProgress } from "@/lib/ocr"
+import { DEFAULT_MODEL, fetchAiStatus, fixWithAi, loadAiSettings, recognizeWithAi, type AiSettings } from "@/lib/ai"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -30,6 +31,17 @@ export default function ImportPage() {
   const [title, setTitle] = React.useState("")
   const [folderId, setFolderId] = React.useState("none")
   const fileRef = React.useRef<HTMLInputElement>(null)
+  const [ai, setAi] = React.useState<AiSettings>({ apiKey: "", model: DEFAULT_MODEL })
+  const [aiReady, setAiReady] = React.useState(false)
+
+  // The button only appears once there is a key to use — on the server, or in
+  // this browser.
+  React.useEffect(() => {
+    const settings = loadAiSettings()
+    setAi(settings)
+    if (settings.apiKey) setAiReady(true)
+    else fetchAiStatus().then((status) => setAiReady(status.serverKey))
+  }, [])
 
   const addFiles = React.useCallback((files: FileList | File[] | null) => {
     if (!files) return
@@ -68,6 +80,43 @@ export default function ImportPage() {
     } catch (error) {
       console.error(error)
       toast.error("Распознавание не удалось")
+    } finally {
+      setBusy(false)
+      setProgress(null)
+    }
+  }
+
+  async function runAi() {
+    if (!shots.length) return
+    setBusy(true)
+    setProgress({ stage: "Отправляю модели", percent: 0 })
+    try {
+      const pairs = await recognizeWithAi(shots.map((shot) => shot.file), ai, setProgress)
+      setRows(pairs.map((pair) => ({ ...pair, id: makeId("row") })))
+      if (!pairs.length) toast.error("Модель не нашла списка слов на снимке")
+      else toast.success(`Модель разобрала строк: ${pairs.length}`)
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Распознавание не удалось")
+    } finally {
+      setBusy(false)
+      setProgress(null)
+    }
+  }
+
+  async function fixAi() {
+    if (!rows.length) return
+    setBusy(true)
+    setProgress({ stage: "Модель правит строки", percent: 0 })
+    try {
+      const pairs = await fixWithAi(rows, ai)
+      if (!pairs.length) {
+        toast.error("Модель не вернула строк")
+        return
+      }
+      setRows(pairs.map((pair) => ({ ...pair, id: makeId("row") })))
+      toast.success("Строки поправлены")
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Не удалось обратиться к модели")
     } finally {
       setBusy(false)
       setProgress(null)
@@ -176,6 +225,27 @@ export default function ImportPage() {
           {busy ? <Loader2 className="size-4 animate-spin" /> : <ScanText className="size-4" />}
           {busy ? (progress ? `${progress.stage} ${progress.percent}%` : "Распознаю…") : "Распознать текст"}
         </Button>
+
+        {aiReady ? (
+          <Button
+            size="lg"
+            variant="outline"
+            className="mt-2 h-12 w-full rounded-md font-bold"
+            disabled={!shots.length || busy}
+            onClick={runAi}
+          >
+            <Sparkles className="size-4" />
+            Распознать с ИИ
+          </Button>
+        ) : (
+          <p className="mt-2 text-center text-xs text-muted-foreground">
+            Почерк и сложные таблицы может разобрать модель —{" "}
+            <Link href="/settings#ai" className="font-bold text-primary underline">
+              добавьте ключ Anthropic
+            </Link>
+            .
+          </p>
+        )}
         {busy && progress && (
           <div className="mt-2 h-1.5 w-full overflow-hidden rounded-full bg-muted">
             <div className="h-full bg-primary transition-all" style={{ width: `${progress.percent}%` }} />
@@ -193,13 +263,22 @@ export default function ImportPage() {
         <section className="mt-10">
           <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
             <h2 className="display-type text-lg font-extrabold">Проверьте строки</h2>
-            <p className="text-sm font-bold text-muted-foreground">
-              {filled} из {rows.length} готовы
-            </p>
+            <div className="flex items-center gap-3">
+              {aiReady && (
+                <Button variant="ghost" size="sm" className="font-bold" disabled={busy} onClick={fixAi}>
+                  <Wand2 className="size-4" />
+                  Поправить ИИ
+                </Button>
+              )}
+              <p className="text-sm font-bold text-muted-foreground">
+                {filled} из {rows.length} готовы
+              </p>
+            </div>
           </div>
           <p className="mb-3 text-sm text-muted-foreground">
             У таблицы в несколько колонок все формы слова собираются в «Термин», а перевод — в «Перевод». Распознавание
             ошибается на мелком шрифте — поправьте, что нужно. Пустые строки не попадут в модуль.
+            {aiReady && " «Поправить ИИ» отправляет модели только эти строки, без снимка."}
           </p>
 
           <div className="space-y-2">

@@ -5,7 +5,9 @@ import { Download, RefreshCw, Sparkles, Trash2, Upload } from "lucide-react"
 import { toast } from "sonner"
 import { useStore } from "@/lib/store"
 import { plural } from "@/lib/text"
+import { AI_MODELS, DEFAULT_MODEL, fetchAiStatus, loadAiSettings, saveAiSettings, type AiSettings } from "@/lib/ai"
 import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Switch } from "@/components/ui/switch"
 import { Textarea } from "@/components/ui/textarea"
@@ -28,6 +30,21 @@ export default function SettingsPage() {
   const { state, ready, updateSettings, exportState, importState, resetAll, demoSetCount, removeDemoSets } = useStore()
   const [raw, setRaw] = React.useState("")
   const fileRef = React.useRef<HTMLInputElement>(null)
+  const [ai, setAi] = React.useState<AiSettings>({ apiKey: "", model: DEFAULT_MODEL })
+  const [serverKey, setServerKey] = React.useState(false)
+
+  React.useEffect(() => {
+    setAi(loadAiSettings())
+    fetchAiStatus().then((status) => setServerKey(status.serverKey))
+  }, [])
+
+  function changeAi(patch: Partial<AiSettings>) {
+    setAi((prev) => {
+      const next = { ...prev, ...patch }
+      saveAiSettings(next)
+      return next
+    })
+  }
 
   if (!ready) return <Skeleton className="mx-auto mt-10 h-64 max-w-2xl rounded-xl" />
 
@@ -97,6 +114,54 @@ export default function SettingsPage() {
             className="w-full accent-primary sm:w-40"
           />
         </Row>
+      </section>
+
+      <section id="ai" className="mt-6 space-y-4 rounded-xl border bg-card p-5 scroll-mt-20">
+        <h2 className="display-type font-extrabold">Распознавание с ИИ</h2>
+        <p className="text-sm text-muted-foreground">
+          На странице импорта появляется кнопка «Распознать с ИИ»: снимок уходит в Anthropic, а модель возвращает
+          готовые пары — она разбирает и почерк, и таблицы, с которыми обычное распознавание не справляется. Само
+          распознавание в браузере остаётся бесплатным и никуда ничего не отправляет.
+        </p>
+
+        <div className="space-y-2">
+          <Label htmlFor="ai-key">Ключ Anthropic API</Label>
+          <Input
+            id="ai-key"
+            type="password"
+            autoComplete="off"
+            spellCheck={false}
+            value={ai.apiKey}
+            onChange={(event) => changeAi({ apiKey: event.target.value })}
+            placeholder={serverKey ? "Ключ уже настроен на сервере" : "sk-ant-…"}
+            className="h-11 font-mono text-xs"
+          />
+          <p className="text-xs text-muted-foreground">
+            {serverKey
+              ? "Сервер уже обращается к модели своим ключом — это поле можно оставить пустым."
+              : "Ключ хранится только в этом браузере, не попадает в резервную копию и не синхронизируется."}{" "}
+            Взять его можно на console.anthropic.com, запросы оплачиваются по тарифам Anthropic.
+          </p>
+        </div>
+
+        <div className="space-y-2">
+          <Label>Модель</Label>
+          <Select value={ai.model} onValueChange={(value) => changeAi({ model: value })}>
+            <SelectTrigger className="w-full">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {AI_MODELS.map((model) => (
+                <SelectItem key={model.id} value={model.id}>
+                  {model.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          <p className="text-xs text-muted-foreground">
+            {AI_MODELS.find((model) => model.id === ai.model)?.note}
+          </p>
+        </div>
       </section>
 
       <section id="import" className="mt-6 space-y-4 rounded-xl border bg-card p-5 scroll-mt-20">
