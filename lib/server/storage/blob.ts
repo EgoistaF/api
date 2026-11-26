@@ -36,7 +36,6 @@ async function baseUrl(): Promise<string | null> {
 
 /** Last write failure, so the health endpoint can report it without writing. */
 let lastWriteError: { at: number; message: string } | null = null
-export const blobWriteFailure = () => lastWriteError
 
 async function writeJson(pathname: string, data: unknown) {
   assertSafePath(pathname)
@@ -94,4 +93,5 @@ export const blobDriver: StorageDriver = {
   readJson,
   writeJson,
   readable,
+  lastWriteFailure: () => lastWriteError,
 }

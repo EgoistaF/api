@@ -14,10 +14,12 @@ export function filesystemDriver(root: string): StorageDriver {
     assertSafePath(pathname)
     return path.join(root, pathname)
   }
+  let lastWriteError: { at: number; message: string } | null = null
 
   return {
     name: "filesystem",
     location: root,
+    lastWriteFailure: () => lastWriteError,
 
     async readJson<T>(pathname: string): Promise<T | null> {
       let bytes: Buffer
@@ -45,8 +47,11 @@ export function filesystemDriver(root: string): StorageDriver {
         const temporary = `${target}.${process.pid}.tmp`
         await writeFile(temporary, gzipSync(Buffer.from(JSON.stringify(data))))
         await rename(temporary, target)
+        lastWriteError = null
       } catch (cause) {
-        console.error("[storage] write failed", pathname, cause)
+        const message = cause instanceof Error ? cause.message : String(cause)
+        console.error("[storage] write failed", pathname, message)
+        lastWriteError = { at: Date.now(), message }
         throw new StorageError("write", cause)
       }
     },

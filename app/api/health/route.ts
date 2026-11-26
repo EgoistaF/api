@@ -23,5 +23,18 @@ export async function GET() {
     storageLocation: storageLocation(),
     storageRead: read,
     writeBlocked,
+    // Why the store refused, in its own words: a quota, a suspended store and
+    // a full disk all look identical from outside, and the difference decides
+    // what to do about it.
+    ...(writeBlocked && failure ? { writeError: redact(failure.message) } : {}),
   })
+}
+
+/** Strips anything from a store's error that could be a credential. */
+function redact(message: string) {
+  return message
+    .replace(/\?\S*/g, "")
+    .replace(/[A-Za-z0-9_-]{24,}/g, "…")
+    .trim()
+    .slice(0, 200)
 }

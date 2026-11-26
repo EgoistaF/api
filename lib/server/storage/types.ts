@@ -1,28 +1,39 @@
 /** Thrown when storage itself is unavailable, so routes can say so plainly. */
 export class StorageError extends Error {
-  constructor(
-    readonly operation: "read" | "write",
-    cause: unknown,
-  ) {
+  // Assigned in the body rather than declared as a constructor parameter, so
+  // that `node --experimental-strip-types` can load this module: the checks
+  // run the storage drivers straight from source.
+  readonly operation: "read" | "write"
+
+  constructor(operation: "read" | "write", cause: unknown) {
     super(`storage ${operation} failed: ${cause instanceof Error ? cause.message : String(cause)}`)
     this.name = "StorageError"
+    this.operation = operation
     this.cause = cause
   }
 }
 
+export type WriteFailure = { at: number; message: string }
+
 /**
- * Everything the profile service needs from a place to keep bytes.
- * Two drivers implement it: Vercel Blob, and the local filesystem for a
- * self-hosted instance.
+ * Everything the profile service needs from a place to keep bytes. Three
+ * drivers implement it: the local filesystem for a self-hosted instance,
+ * Vercel Blob, and a Redis store over HTTPS.
  */
 export type StorageDriver = {
-  readonly name: "blob" | "filesystem"
+  readonly name: "blob" | "filesystem" | "redis"
   /** Where the data lives, for the health endpoint. Never a secret. */
   readonly location: string
   readJson<T>(pathname: string): Promise<T | null>
   writeJson(pathname: string, data: unknown): Promise<void>
   /** Whether the store can be reached at all, without touching user data. */
   readable(): Promise<boolean>
+  /**
+   * The last write that failed, if the driver remembers one. A quota or a
+   * full disk shows up in no other way: reading keeps working, and only a
+   * write proves the store is refusing them.
+   */
+  lastWriteFailure?(): WriteFailure | null
 }
 
 export type UserRecord = {

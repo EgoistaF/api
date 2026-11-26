@@ -110,12 +110,42 @@ does not work over plain HTTP from anywhere but localhost.
 | Variable | Default | Meaning |
 |---|---|---|
 | `AUTH_SECRET` | — | Required. Signs sessions, derives storage paths |
-| `DATA_DIR` | `./.data` | Where profiles are kept |
-| `STORAGE_DRIVER` | auto | `filesystem` or `blob`; auto picks blob when `BLOB_READ_WRITE_TOKEN` is set |
+| `DATA_DIR` | `./.data` | Where profiles are kept, with the filesystem driver |
+| `STORAGE_DRIVER` | auto | `filesystem`, `redis` or `blob`; see below |
+| `UPSTASH_REDIS_REST_URL` / `UPSTASH_REDIS_REST_TOKEN` | — | A Redis store over HTTPS. `KV_REST_API_URL` / `KV_REST_API_TOKEN` work too |
+| `BLOB_READ_WRITE_TOKEN` | — | A Vercel Blob store |
 | `PORT` | `3000` | Port to listen on |
 | `ANTHROPIC_API_KEY` | — | Optional. Lets everyone on this server read word lists with Claude |
 
-`/api/health` reports which driver is active and whether it is writable.
+`/api/health` reports which driver is active, whether it can be read, and —
+when a write has just failed — the store's own words about why.
+
+### Where profiles are kept
+
+Three places, chosen in this order unless `STORAGE_DRIVER` names one:
+
+1. **Redis over HTTPS** (`redis`), when `UPSTASH_REDIS_REST_URL` and its token
+   are set. For a hosted instance.
+2. **Vercel Blob** (`blob`), when `BLOB_READ_WRITE_TOKEN` is set.
+3. **The filesystem** (`filesystem`) otherwise. For a server with a disk: no
+   quota, no third party, and the store is a directory you can copy.
+
+All three write the same bytes — gzipped JSON, one file per profile — so
+moving between them is a copy, not a conversion.
+
+**Vercel Blob runs out.** Its free plan counts every saved library as an
+"advanced operation" and allows 2 000 a month; one person studying daily can
+use them up, and then sign-up fails while reading keeps working. `/api/health`
+shows that as `writeBlocked: true`. A free Redis store counts plain commands
+and allows hundreds of thousands, which is why it is preferred when both are
+configured.
+
+On Vercel: **Storage → Create → Upstash Redis**, connect it to the project,
+and it sets `UPSTASH_REDIS_REST_URL` and `UPSTASH_REDIS_REST_TOKEN` itself.
+Redeploy, then check `/api/health` says `"storage":"redis"`.
+
+Anything that speaks the Upstash REST protocol works, self-hosted included:
+point the two variables at it.
 
 ### Reading word lists with a model
 
@@ -141,7 +171,8 @@ from that browser onwards.
 ## Checking it works
 
 ```bash
-npm run check                                   # logic, no server needed
+npm run check                                   # logic and the profile store,
+                                                # no server needed
 BASE=https://quiz.example.com npm run test:e2e  # the whole app, including
                                                 # two devices sharing a profile
 ```

@@ -10,6 +10,10 @@ services:
       # Changing it signs everyone out and makes existing profiles unreachable.
       AUTH_SECRET: ${AUTH_SECRET:?set AUTH_SECRET in .env}
       DATA_DIR: /data
+      # Optional: keep profiles in a Redis store over HTTPS instead of on the
+      # volume below. Leave both empty for the disk.
+      UPSTASH_REDIS_REST_URL: ${UPSTASH_REDIS_REST_URL:-}
+      UPSTASH_REDIS_REST_TOKEN: ${UPSTASH_REDIS_REST_TOKEN:-}
       # Optional: lets everyone on this server read word lists with Claude,
       # billed to this key. Without it each person can use their own.
       ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
