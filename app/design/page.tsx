@@ -1,7 +1,6 @@
 "use client"
 
 import * as React from "react"
-import { Lora } from "next/font/google"
 import {
   ArrowRight,
   BookOpen,
@@ -21,8 +20,16 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { cn } from "@/lib/utils"
 import "./palettes.css"
+import "./lora.css"
 
-const display = Lora({ subsets: ["latin", "cyrillic"], variable: "--font-display", weight: ["500", "600", "700"] })
+/**
+ * The serif used by the "warm paper" palette, served from this repository
+ * rather than fetched by next/font at build time: Google has started handing
+ * out font URLs that carry a query string, which the bundler's font loader
+ * cannot resolve, and a build that reaches for a font over the network is one
+ * more thing that can stop a deploy. See lora.css.
+ */
+const DISPLAY_FONT = "font-lora"
 
 type PaletteId = "graphite" | "paper" | "berlin"
 
@@ -69,11 +76,11 @@ export default function DesignPage() {
     root.classList.toggle("dark", dark)
     // --display-family resolves against :root, so the font variable has to
     // be defined there too, not on an inner wrapper.
-    root.classList.add(display.variable)
+    root.classList.add(DISPLAY_FONT)
     return () => {
       delete root.dataset.palette
       root.classList.toggle("dark", hadDark)
-      root.classList.remove(display.variable)
+      root.classList.remove(DISPLAY_FONT)
     }
   }, [palette, dark])
 
