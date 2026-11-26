@@ -78,7 +78,7 @@ export function AppHeader() {
           </Button>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button className="h-10 gap-1.5 rounded-md px-3 font-bold sm:px-4">
+              <Button className="h-10 gap-1.5 rounded-md px-3 font-bold sm:px-4" data-tour="create">
                 <Plus className="size-4" />
                 <span className="hidden sm:inline">Создать</span>
               </Button>

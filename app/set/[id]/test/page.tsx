@@ -38,13 +38,15 @@ const TYPE_LABELS: Record<QType, string> = {
 
 export default function TestPage() {
   const params = useParams<{ id: string }>()
-  const { ready, state, recordAnswer, recordTest } = useStore()
+  const { ready, state, recordAnswer, recordTest, updateSettings } = useStore()
   const set = useSet(params.id)
 
   const [phase, setPhase] = React.useState<"setup" | "test" | "result">("setup")
   const [count, setCount] = React.useState(10)
   const [types, setTypes] = React.useState<Record<QType, boolean>>({ written: true, choice: true, trueFalse: true, matching: true })
-  const [answerWithTerm, setAnswerWithTerm] = React.useState(false)
+  // The same setting as everywhere else, read the other way round: answering
+  // with the term means the question is the translation.
+  const answerWithTerm = !state.settings.frontIsTerm
   const [starredOnly, setStarredOnly] = React.useState(false)
 
   const [questions, setQuestions] = React.useState<Question[]>([])
@@ -216,7 +218,11 @@ export default function TestPage() {
                 <Label htmlFor="with-term" className="text-sm">
                   Отвечать термином (а не определением)
                 </Label>
-                <Switch id="with-term" checked={answerWithTerm} onCheckedChange={setAnswerWithTerm} />
+                <Switch
+                  id="with-term"
+                  checked={answerWithTerm}
+                  onCheckedChange={(checked) => updateSettings({ frontIsTerm: !checked })}
+                />
               </div>
               <div className="flex items-center justify-between gap-3">
                 <Label htmlFor="starred" className="text-sm">

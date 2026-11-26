@@ -5,6 +5,7 @@ import Link from "next/link"
 import { useParams, useRouter } from "next/navigation"
 import {
   ArrowLeft,
+  ArrowLeftRight,
   ArrowRight,
   BookOpen,
   Copy,
@@ -55,7 +56,8 @@ const MODES = [
 export default function SetPage() {
   const params = useParams<{ id: string }>()
   const router = useRouter()
-  const { ready, getProgress, toggleStar, starAll, deleteSet, duplicateSet, resetProgress, touchRecent, state } = useStore()
+  const { ready, getProgress, toggleStar, starAll, deleteSet, duplicateSet, resetProgress, touchRecent, state, updateSettings } =
+    useStore()
   const set = useSet(params.id)
 
   const [index, setIndex] = React.useState(0)
@@ -236,22 +238,42 @@ export default function SetPage() {
             onFlip={() => setFlipped((prev) => !prev)}
             onStar={() => toggleStar(set.id, current.id)}
           />
-          <div className="mt-4 flex items-center justify-between">
-            <Button
-              variant="ghost"
-              size="sm"
-              className="font-bold"
-              onClick={() => {
-                setOrder(order ? null : shuffle(set.terms.map((term) => term.id)))
-                setIndex(0)
-                setFlipped(false)
-                toast.success(order ? "Исходный порядок" : "Карточки перемешаны")
-              }}
-            >
-              <Shuffle className={cn("size-4", order && "text-primary")} />
-              Перемешать
-            </Button>
-            <div className="flex items-center gap-3">
+          {/* Three groups that wrap onto a second line on a narrow phone. */}
+          <div className="mt-4 flex flex-wrap items-center justify-between gap-x-2 gap-y-3">
+            <div className="flex items-center gap-1">
+              <Button
+                variant="ghost"
+                size="sm"
+                className="font-bold"
+                onClick={() => {
+                  setOrder(order ? null : shuffle(set.terms.map((term) => term.id)))
+                  setIndex(0)
+                  setFlipped(false)
+                  toast.success(order ? "Исходный порядок" : "Карточки перемешаны")
+                }}
+              >
+                <Shuffle className={cn("size-4", order && "text-primary")} />
+                Перемешать
+              </Button>
+              {/* Which side comes first — the same setting every study mode reads. */}
+              <Button
+                variant="ghost"
+                size="sm"
+                className="font-bold tabular-nums"
+                aria-label="Поменять стороны карточек местами"
+                data-tour="direction"
+                onClick={() => {
+                  updateSettings({ frontIsTerm: !state.settings.frontIsTerm })
+                  setFlipped(false)
+                }}
+              >
+                <ArrowLeftRight className="size-4" />
+                {state.settings.frontIsTerm
+                  ? `${sideLabel(set.termLang)} → ${sideLabel(set.defLang)}`
+                  : `${sideLabel(set.defLang)} → ${sideLabel(set.termLang)}`}
+              </Button>
+            </div>
+            <div className="order-last flex w-full items-center justify-center gap-3 sm:order-none sm:w-auto">
               <Button variant="outline" size="icon" className="rounded-full" onClick={() => go(-1)} aria-label="Назад">
                 <ArrowLeft className="size-4" />
               </Button>
@@ -365,4 +387,10 @@ function Stat({ label, value, color }: { label: string; value: number; color: st
 function Segment({ value, total, className }: { value: number; total: number; className: string }) {
   if (!total || !value) return null
   return <div className={className} style={{ width: `${(value / total) * 100}%` }} />
+}
+
+/** "de-DE" reads as DE on a button; a set without a language falls back to words. */
+function sideLabel(code: string | undefined) {
+  const tag = (code ?? "").split("-")[0]
+  return tag ? tag.toUpperCase() : "?"
 }

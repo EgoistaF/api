@@ -29,7 +29,9 @@ export default function LearnPage() {
   const set = useSet(params.id)
 
   const [starredOnly, setStarredOnly] = React.useState(false)
-  const [askTermFirst, setAskTermFirst] = React.useState(true)
+  // Which way round the cards are asked is one setting for the whole app, so
+  // that turning it over here keeps it turned over everywhere else.
+  const askTermFirst = state.settings.frontIsTerm
   const [queue, setQueue] = React.useState<Question[]>([])
   const [roundIndex, setRoundIndex] = React.useState(0)
   const [roundNumber, setRoundNumber] = React.useState(1)
@@ -266,7 +268,11 @@ export default function LearnPage() {
               <Label htmlFor="ask-term" className="text-sm">
                 Спрашивать термин
               </Label>
-              <Switch id="ask-term" checked={askTermFirst} onCheckedChange={setAskTermFirst} />
+              <Switch
+                id="ask-term"
+                checked={askTermFirst}
+                onCheckedChange={(checked) => updateSettings({ frontIsTerm: checked })}
+              />
             </div>
             <div className="flex items-center justify-between gap-3">
               <Label htmlFor="starred" className="text-sm">
@@ -317,7 +323,9 @@ export default function LearnPage() {
               </Button>
             </div>
           </div>
-          <p className="mt-5 min-h-[4rem] text-2xl font-bold leading-snug text-balance sm:text-3xl">{prompt}</p>
+          <p data-prompt className="mt-5 min-h-[4rem] text-2xl font-bold leading-snug text-balance sm:text-3xl">
+            {prompt}
+          </p>
         </div>
 
         <div className="mt-6">

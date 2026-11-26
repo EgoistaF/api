@@ -60,6 +60,8 @@ export type Settings = {
   learnMode: "mixed" | "written" | "choice"
   accentInsensitive: boolean
   autoplayDelay: number
+  /** The first-visit walk-through has been shown (or skipped). */
+  tourSeen: boolean
 }
 
 export type Stats = {
@@ -97,6 +99,7 @@ export const DEFAULT_SETTINGS: Settings = {
   learnMode: "mixed",
   accentInsensitive: true,
   autoplayDelay: 4,
+  tourSeen: false,
 }
 
 export const FOLDER_COLORS = [

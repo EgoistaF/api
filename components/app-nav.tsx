@@ -123,6 +123,7 @@ function SidebarLink({ item, active, badge = 0 }: { item: Destination; active: b
   return (
     <Link
       href={item.href}
+      data-tour={`nav-${item.href.slice(1) || "home"}`}
       className={cn(
         "flex items-center gap-3 rounded-md px-3 py-2.5 text-sm font-bold transition-colors",
         active ? "bg-accent text-accent-foreground" : "text-muted-foreground hover:bg-secondary hover:text-foreground",
@@ -163,6 +164,7 @@ export function AppBottomNav() {
             <Link
               key={item.href}
               href={item.href}
+              data-tour={`nav-${item.href.slice(1) || "home"}`}
               className={cn(
                 "relative flex flex-1 flex-col items-center gap-1 px-1 py-2.5 text-[11px] font-bold transition-colors",
                 active ? "text-foreground" : "text-muted-foreground",

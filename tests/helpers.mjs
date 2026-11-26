@@ -27,7 +27,57 @@ async function loadPlaywright() {
 }
 
 const playwright = await loadPlaywright()
-export const { chromium, devices } = playwright
+export const { devices } = playwright
+
+/**
+ * Marks the first-run walk-through as already seen, before the app starts.
+ *
+ * It covers the screen and swallows every tap until it is dismissed — which
+ * is the point of it, and which would otherwise stop every suite on its first
+ * click. The suite that tests the walk-through itself writes the flag back to
+ * false and reloads.
+ */
+const TOUR_SEEN = () => {
+  try {
+    const key = "quizmaster.state.v1"
+    const raw = localStorage.getItem(key)
+    const state = raw
+      ? JSON.parse(raw)
+      : {
+          version: 1,
+          sets: [],
+          folders: [],
+          progress: {},
+          verbProgress: {},
+          recent: [],
+          deleted: {},
+          stats: { studyDays: [], cardsStudied: 0, sessions: 0 },
+        }
+    // Only when nothing has been said either way: a suite that deliberately
+    // asks for the walk-through sets the flag to false and must keep it.
+    if (state.settings?.tourSeen === undefined) {
+      state.settings = { ...(state.settings || {}), tourSeen: true }
+      localStorage.setItem(key, JSON.stringify(state))
+    }
+  } catch {
+    /* a browser without storage shows the walk-through; nothing to do */
+  }
+}
+
+/** Playwright's chromium, with every context it opens starting past the tour. */
+export const chromium = {
+  ...playwright.chromium,
+  async launch(options) {
+    const browser = await playwright.chromium.launch(options)
+    const open = browser.newContext.bind(browser)
+    browser.newContext = async (contextOptions) => {
+      const context = await open(contextOptions)
+      await context.addInitScript(TOUR_SEEN)
+      return context
+    }
+    return browser
+  },
+}
 
 let failures = 0
 

@@ -1,6 +1,7 @@
 "use client"
 
 import * as React from "react"
+import { useRouter } from "next/navigation"
 import { Download, RefreshCw, Sparkles, Trash2, Upload } from "lucide-react"
 import { toast } from "sonner"
 import { useStore } from "@/lib/store"
@@ -28,6 +29,7 @@ import {
 
 export default function SettingsPage() {
   const { state, ready, updateSettings, exportState, importState, resetAll, demoSetCount, removeDemoSets } = useStore()
+  const router = useRouter()
   const [raw, setRaw] = React.useState("")
   const fileRef = React.useRef<HTMLInputElement>(null)
   const [ai, setAi] = React.useState<AiSettings>({ apiKey: "", model: DEFAULT_MODEL })
@@ -83,8 +85,23 @@ export default function SettingsPage() {
         <Row label="Озвучка терминов" hint="Показывать кнопку синтеза речи">
           <Switch checked={state.settings.ttsEnabled} onCheckedChange={(checked) => updateSettings({ ttsEnabled: checked })} />
         </Row>
-        <Row label="Сначала показывать термин" hint="Иначе карточка открывается определением">
+        <Row label="Сначала термин, потом перевод" hint="Выключите — и все режимы спросят наоборот: перевод, потом термин">
           <Switch checked={state.settings.frontIsTerm} onCheckedChange={(checked) => updateSettings({ frontIsTerm: checked })} />
+        </Row>
+        <Row label="Подсказки по приложению" hint="Короткий тур: что где находится">
+          <Button
+            variant="outline"
+            size="sm"
+            className="font-bold"
+            onClick={() => {
+              updateSettings({ tourSeen: false })
+              toast.success("Подсказки покажутся на главной")
+              router.push("/")
+            }}
+          >
+            <Sparkles className="size-4" />
+            Показать заново
+          </Button>
         </Row>
         <Row label="Игнорировать диакритику" hint="café = cafe при проверке ответа">
           <Switch

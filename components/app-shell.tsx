@@ -4,6 +4,7 @@ import type React from "react"
 import { usePathname } from "next/navigation"
 import { AppHeader } from "@/components/app-header"
 import { AppBottomNav, AppSidebar } from "@/components/app-nav"
+import { Tour } from "@/components/tour"
 
 /** Study modes take the whole screen: no header, no navigation, no distractions. */
 const STUDY_ROUTE = /\/(flashcards|learn|write|spell|test|match)$/
@@ -24,6 +25,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         <main className="flex-1 pb-24 lg:pb-0">{children}</main>
       </div>
       <AppBottomNav />
+      <Tour />
     </div>
   )
 }

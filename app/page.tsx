@@ -228,8 +228,11 @@ export default function HomePage() {
         </div>
         {recentSets.length ? (
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-            {recentSets.map((set) => (
-              <SetCard key={set.id} set={set} />
+            {recentSets.map((set, index) => (
+              // The first card is what the walk-through lights up.
+              <div key={set.id} data-tour={index === 0 ? "set-card" : undefined}>
+                <SetCard set={set} />
+              </div>
             ))}
           </div>
         ) : (

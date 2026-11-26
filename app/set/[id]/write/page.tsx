@@ -25,7 +25,8 @@ export default function WritePage() {
   const set = useSet(params.id)
 
   const [starredOnly, setStarredOnly] = React.useState(false)
-  const [askTermFirst, setAskTermFirst] = React.useState(true)
+  // One setting for every mode: see the note in the learn page.
+  const askTermFirst = state.settings.frontIsTerm
   const [queue, setQueue] = React.useState<Term[]>([])
   const [index, setIndex] = React.useState(0)
   const [input, setInput] = React.useState("")
@@ -163,7 +164,7 @@ export default function WritePage() {
                 id="ask-term"
                 checked={askTermFirst}
                 onCheckedChange={(checked) => {
-                  setAskTermFirst(checked)
+                  updateSettings({ frontIsTerm: checked })
                   setVerdict("idle")
                   setInput("")
                 }}
@@ -218,7 +219,9 @@ export default function WritePage() {
               </Button>
             </div>
           </div>
-          <p className="mt-5 min-h-[4rem] text-2xl font-bold leading-snug text-balance sm:text-3xl">{prompt}</p>
+          <p data-prompt className="mt-5 min-h-[4rem] text-2xl font-bold leading-snug text-balance sm:text-3xl">
+            {prompt}
+          </p>
         </div>
 
         <div className="mt-6">
